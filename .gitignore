@@ -1,0 +1,10 @@
+/dist
+/node_modules
+/logs
+/coverage
+
+.env
+.vscode
+
+yarn-debug.log*
+yarn-error.log*

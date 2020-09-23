@@ -1,12 +1,11 @@
-import 'module-alias/register';
 import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-import { logger } from '@shared/winston';
-import { v1Router } from '@api/router';
+import { logger } from './shared/winston';
+import { v1Router } from './api/router';
 
 dotenv.config();
 

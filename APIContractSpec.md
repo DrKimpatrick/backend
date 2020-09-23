@@ -2,6 +2,32 @@
 
 ---
 
+#### Skill
+
+```source-json
+  {
+    "id": string,
+    "skill": string,
+    "level": "beginner|intermediate|advanced",
+    "verificationStatus": "verified|inProgress|unverified"
+  }
+```
+
+#### Course
+
+```source-json
+{
+  "id": string,
+  "name": string,
+  "languageTaught": string,
+  "instructor": string,
+  "currentLangSpecsUpdated": boolean,
+  "existingCourseLink": string,
+  "coverImageLink": string,
+  "verificationStatus: "accepted|pending|declined"
+}
+```
+
 #### Users
 
 - **Talent**
@@ -9,11 +35,11 @@
 ```source-json
   {
     "user": {
-      "type": "talent",
+      "role": "talent",
       "featureChoice": "premium",
       "paymentStatus": "unpaid|failed|confirmed",
       "profileStatus": "draft|pusblished",
-      "verified": false,
+      "verified": boolean,
       "firstName": "John",
       "lastName": "Smith",
       "email": "jsmith@email.com",
@@ -23,21 +49,9 @@
         "endDate": "10-12-2020"
       },
       "skills": [
-        {
-          "skill": "Angular",
-          "level": "beginner|intermediate|advanced",
-          "verificationStatus": "verified|inProgress|unverified"
-        },
-        {
-          "skill": "Python",
-          "level": "beginner|intermediate|advanced",
-          "verificationStatus": "verified|inProgress|unverified"
-        },
-        {
-          "skill": "Angular",
-          "level": "beginner|intermediate|advanced",
-          "verificationStatus": "verified|inProgress|unverified"
-        }
+        {<skill_object>},
+        {<skill_object>},
+        {<skill_object>}
       ],
       "employmentHistory": [
         {
@@ -74,13 +88,13 @@
 ```source-json
   {
     "user": {
-      "type": "education",
+      "role": "education",
       "paymentStatus": "unpaid|failed|confirmed",
       "schoolName": "Hack Reactor Texas",
       "address": "123 Main Street, New York, NY 10030",
       "website": "hackreactor.com",
       "schoolCode": "HR500",
-      "verified": false,
+      "verified": boolean,
       "manager": {
         "name": "John Doe",
         "email": "johndoe@email.com",
@@ -95,28 +109,23 @@
   }
 ```
 
-- **Training**
+- **Training Affiliate**
 
 ```source-json
   {
     "user": {
-      "type": "training",
+      "role": "training",
       "paymentStatus": "unpaid|failed|confirmed",
-      "schoolName": "Hack Reactor Texas",
+      "name": "Hack Reactor Texas",
       "address": "123 Main Street, New York, NY 10030",
       "website": "hackreactor.com",
-      "schoolCode": "HR500",
-      "verified": false,
-      "manager": {
+      "verified": boolean,
+      "affiliateContact": {
         "name": "John Doe",
         "email": "johndoe@email.com",
         "phone": "001994545"
       },
-      "subsidizedStudents": {
-        "number": 500,
-        "term": "monthly|annualy",
-        "termTotal": "$$$$",
-      }
+      "courses": [{<course_object>}, {<course_object>}, {<course_object>}]
     }
   }
 ```
@@ -126,19 +135,19 @@
 ```source-json
   {
     "user": {
-      "type": "hr-staffing-recruiter",
+      "role": "hr-staffing-recruiter",
       "paymentStatus": "unpaid|failed|confirmed",
-      "schoolName": "Hack Reactor Texas",
+      "companyName": "Hack Reactor Texas",
       "address": "123 Main Street, New York, NY 10030",
       "website": "hackreactor.com",
-      "schoolCode": "HR500",
-      "verified": false,
+      "companyCode": "HR500",
+      "verified": boolean,
       "manager": {
         "name": "John Doe",
         "email": "johndoe@email.com",
         "phone": "001994545"
       },
-      "subsidizedStudents": {
+      "subsidizedStaff": {
         "number": 500,
         "term": "monthly|annualy",
         "termTotal": "$$$$",
@@ -153,7 +162,7 @@
 
 Authenticates user's credentials
 
-##### `POST /auth/login`
+##### `POST /api/auth/login`
 
 - **Data Params**
 
@@ -179,7 +188,7 @@ Authenticates user's credentials
   - Content:
     ```source-json
       {
-        "error": "You are unauthorized to make this request."
+        "error": "You have one or more invalid credentials"
       }
     ```
     OR
@@ -195,15 +204,16 @@ Authenticates user's credentials
 
 Create a user account
 
-##### `POST /auth/register`
+##### `POST /api/auth/register`
 
 - **Data Params**
 
 ```source-json
   {
     "email": string,
-    "password": string",
-    ...{<user_sign_up_data>}
+    "password": string,
+    "role": string,
+    ...
   }
 ```
 
@@ -223,5 +233,283 @@ Create a user account
     ```source-json
       {
         "error": "Missing or Invalid required field(s)"
+      }
+    ```
+
+#### Get users by role
+
+1. `GET /api/users/talent`
+
+2. `GET /api/users/education`
+
+3. `GET /api/users/training`
+
+4. `GET /api/users/business`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "data": [
+          {<user_object>},
+          {<user_object>},
+          {<user_object>}
+        ]
+      }
+    ```
+
+- **Error Response**
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Get current user
+
+Get the currently logged in user
+
+##### `GET /api/user`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "profile": {<user_object>},
+      }
+    ```
+
+- **Error Response**
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Get a specific user
+
+Get a user by id
+
+##### `GET /api/users/:id`
+
+- **URL Params**
+  Required: `id=[string]`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "profile": {<user_object>},
+      }
+    ```
+
+- **Error Response**
+  - Code: `404`
+  - Content:
+    ```source-json
+      {
+        "message": "User not found"
+      }
+    ```
+    OR
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Update fields a specific user
+
+Updates fields on the specified user and returns the updated object
+
+##### `PATCH /api/users/:id`
+
+- **URL Params**
+  Required: `id=[string]`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Data Params**
+
+```source-json
+  {
+    "email": string,
+    ...
+  }
+```
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "profile": {<user_object>},
+      }
+    ```
+
+- **Error Response**
+  - Code: `404`
+  - Content:
+    ```source-json
+      {
+        "message": "User not found"
+      }
+    ```
+    OR
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Delete a specific user
+
+Updates fields on the specified user and returns the updated object
+
+##### `DELETE /api/users/:id`
+
+- **URL Params**
+  Required: `id=[string]`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `204`
+  - Content: No Content
+
+- **Error Response**
+  - Code: `404`
+  - Content:
+    ```source-json
+      {
+        "message": "User not found"
+      }
+    ```
+    OR
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Get talent based on skills
+
+Fetch list of users matching given skill(s)
+
+##### `GET /api/users/talent?skills=id,id`
+
+- **URL Query**
+  Required: `id=[string]` (at least one)
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "data": [
+          {<user_object>},
+          {<user_object>},
+          {<user_object>}
+        ]
+      }
+    ```
+
+- **Error Response**
+  - Code: `404`
+  - Content:
+    ```source-json
+      {
+        "message": "No users found"
+      }
+    ```
+    OR
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
+      }
+    ```
+
+#### Get talent based on subscription
+
+Fetch list of users matching given skill(s)
+
+##### `GET /api/users/talent?subcription=premium|standard|basic`
+
+- **URL Query**
+  Required: `subscription=[string]`
+
+- **Headers**
+  Content-Type: application/json
+  Authorization: Bearer `<Token>`
+
+- **Success Response**
+
+  - Code: `200`
+  - Content:
+    ```source-json
+      {
+        "data": [
+          {<user_object>},
+          {<user_object>},
+          {<user_object>}
+        ]
+      }
+    ```
+
+- **Error Response**
+  - Code: `404`
+  - Content:
+    ```source-json
+      {
+        "message": "No users found"
+      }
+    ```
+    OR
+  - Code: `401`
+  - Content:
+    ```source-json
+      {
+        "error": "You are unauthorised to make this request"
       }
     ```

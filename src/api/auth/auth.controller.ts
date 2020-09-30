@@ -14,3 +14,5 @@ export const authController = (() => {
     login: handleLogin,
   };
 })();
+
+export { authController as AuthController };

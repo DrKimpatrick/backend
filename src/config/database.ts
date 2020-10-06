@@ -8,6 +8,7 @@ const mongoClient = (() => {
     useNewUrlParser: true,
     keepAlive: true,
     useUnifiedTopology: true,
+    useFindAndModify: false,
   };
 
   let instance: Connection;

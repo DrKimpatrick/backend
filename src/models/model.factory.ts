@@ -1,7 +1,9 @@
 import { logger } from '../shared/winston';
+import path from 'path';
+import { Model } from 'mongoose';
 
-const trimTs = (path: string) => {
-  return path.substr(0, path.length - 3);
+const trimTs = (pathD: string) => {
+  return pathD.substr(0, pathD.length - 3);
 };
 
 class ModelFactory {
@@ -12,13 +14,13 @@ class ModelFactory {
    * @param name
    * @returns {mongoose.Schema}
    */
-  static getModel(name: string) {
-    if (!name) return null;
+  static getModel(name: string): Model<any> {
+    if (!name) throw Error('Model name not provided');
     const modelName = name.toLowerCase();
     const filename = `${modelName}.model.ts`;
 
     try {
-      const model = require(`./${trimTs(filename)}`);
+      const model = require(path.join(__dirname, trimTs(filename)));
       if (model.default !== undefined) {
         // in case it was exported as a default,
         // export default ModelName ...or....

@@ -6,6 +6,15 @@
     "tslint-config-prettier"
   ],
   "jsRules": {},
-  "rules": {},
-  "rulesDirectory": []
+  "linterOptions": {
+    "exclude": [
+      "src/**/mocks/**/*.ts",
+      "src/**/*.spec.ts"
+    ]
+  },
+  "rules": {
+    "no-var-requires": false,
+    "import-name": false,
+    "no-namespace": false
+  }
 }

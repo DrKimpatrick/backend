@@ -11,7 +11,7 @@ import { genRandomString } from '../helpers';
 
 const findEmailFromProvider = (
   provider: SOCIAL_AUTH_TYPES,
-  profile: google.Profile | github.Profile | linkedin.Profile,
+  profile: google.Profile | github.Profile | linkedin.Profile
 ) => {
   try {
     if (profile && profile.emails && profile.emails.length > 0) {
@@ -27,7 +27,7 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
   accessToken: string,
   refreshToken: string,
   profile: google.Profile | github.Profile | linkedin.Profile,
-  next: google.VerifyFunction,
+  next: google.VerifyFunction
 ) => {
   try {
     const userEmail = findEmailFromProvider(provider, profile);
@@ -37,7 +37,7 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
       .findOneAndUpdate(
         { provider, socialId: profile.id },
         { profile, name: profile.displayName, email: userEmail },
-        { upsert: true, new: true },
+        { upsert: true, new: true }
       )
       .exec();
     if (!socialUser) {
@@ -75,7 +75,7 @@ export const googleStrategy = new google.OAuth2Strategy(
     clientSecret: environment.googleClientSecret,
     callbackURL: util.format(environment.socialAuthCallBackUrl, 'google'),
   },
-  callback(SOCIAL_AUTH_TYPES.GOOGLE),
+  callback(SOCIAL_AUTH_TYPES.GOOGLE)
 );
 
 export const githubStrategy = new github.Strategy(
@@ -84,7 +84,7 @@ export const githubStrategy = new github.Strategy(
     clientSecret: environment.githubClientSecret,
     callbackURL: util.format(environment.socialAuthCallBackUrl, 'github'),
   },
-  callback(SOCIAL_AUTH_TYPES.GITHUB),
+  callback(SOCIAL_AUTH_TYPES.GITHUB)
 );
 
 export const linkedinStrategy = new linkedin.Strategy(
@@ -95,7 +95,7 @@ export const linkedinStrategy = new linkedin.Strategy(
     // @ts-ignore
     scope: ['r_liteprofile', 'r_emailaddress'],
   },
-  callback(SOCIAL_AUTH_TYPES.LINKED_IN),
+  callback(SOCIAL_AUTH_TYPES.LINKED_IN)
 );
 
 passport.use(googleStrategy);

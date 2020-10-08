@@ -26,7 +26,7 @@ const routeSocialProvider = (strategy: string, options: AuthenticateOptions) => 
     passport.authenticate(strategy, {
       failureRedirect: cache.get('SOCIAL_AUTH_REDIRECT_URL') || environment.socialAuthRedirectURL,
     }),
-    authController.socialAuthCallback,
+    authController.socialAuthCallback
   );
 };
 

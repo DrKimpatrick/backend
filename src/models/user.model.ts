@@ -23,7 +23,7 @@ const userSchema = new Schema({
   },
   contact: {
     type: String,
-    required: [false, 'This user won\'t be activated without a phone number'],
+    required: [false, "This user won't be activated without a phone number"],
     min: [10, 'A phone number can have at-least 10 digits'],
     max: [13, 'Please enter a valid phone number, this is too long'],
   },

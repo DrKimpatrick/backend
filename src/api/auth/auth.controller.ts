@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { environment } from '../../config/environment';
 import * as url from 'url';
 import cache from '../../shared/cache';
+import { CREATED, SERVER_ERROR } from '../../constants/statusCodes';
+import { MODELS } from '../../constants';
+import { ModelFactory } from '../../models/model.factory';
 
 /**
  * @function authController
@@ -28,6 +31,28 @@ export class AuthController {
     });
     cache.remove('SOCIAL_AUTH_REDIRECT_URL');
     res.redirect(endpoint);
+  }
+  async register(req: Request, res: Response) {
+    const { username, email, password } = req.body;
+    try {
+      const userModel = ModelFactory.getModel(MODELS.USER);
+      const user = await userModel.create({
+        username,
+        email,
+        password,
+      });
+      user.password = undefined;
+      const data = user.toAuthJSON();
+
+      // send email
+
+      return res.status(CREATED).json({
+        profile: user,
+        token: data.token,
+      });
+    } catch (error) {
+      return res.status(SERVER_ERROR).json({ error: error.message });
+    }
   }
 }
 

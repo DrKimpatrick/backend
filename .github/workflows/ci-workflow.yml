@@ -48,6 +48,8 @@ jobs:
       - run: yarn test
         env:
           DB_URI: ${{ secrets.TEST_DB_URI }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
           CLIENT_ID_GITHUB: ${{ secrets.CLIENT_ID_GITHUB }}
           CLIENT_SECRET_GITHUB: ${{ secrets.CLIENT_SECRET_GITHUB }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}

@@ -16,4 +16,8 @@ const environment = {
   socialAuthRedirectURL: process.env.SOCIAL_AUTH_REDIRECT_URL || '',
 };
 
+if (environment.env === 'test') {
+  environment.dbUrl = process.env.TEST_DB_URI || '';
+}
+
 export { environment };

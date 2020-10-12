@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
 import {
+  createRefreshToken,
   generateJWTToken,
+  getUserFullName,
   saveUser,
   toAuthJSON,
   validatePassword,
-  getUserFullName,
 } from '../helpers/model.helpers';
 import { SIGNUP_MODE } from '../constants';
 
@@ -35,6 +36,7 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       unique: true,
+      index: true,
       required: [true, 'An Email is required'],
       validate: (input: string) => validator.isEmail(input),
     },
@@ -47,6 +49,16 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, 'A password is required'],
+      select: false,
+    },
+    refreshToken: {
+      type: String,
+      required: false,
+      select: false,
+    },
+    authTag: {
+      type: String,
+      required: false,
       select: false,
     },
     roles: {
@@ -77,5 +89,6 @@ userSchema.pre('save', saveUser);
 userSchema.methods.validatePassword = validatePassword;
 userSchema.methods.generateJWTToken = generateJWTToken;
 userSchema.methods.toAuthJSON = toAuthJSON;
+userSchema.methods.createRefreshToken = createRefreshToken;
 
 export = mongoose.model('User', userSchema);

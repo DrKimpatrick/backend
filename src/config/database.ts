@@ -17,7 +17,6 @@ const mongoClient = (() => {
   const getClient = async () => {
     try {
       await mongoose.connect(environment.dbUrl as string, options);
-      
 
       const { connection } = mongoose;
 

@@ -6,6 +6,42 @@ import cache from '../../shared/cache';
 import { validate, registerValidator } from '../../helpers/validator';
 
 const authRouter = Router();
+/**
+ * @swagger
+ * definition:
+ *   Error:
+ *     type: object
+ *     properties:
+ *       error:
+ *         type: string
+ *         description: Error message
+ *   UserLogin:
+ *     type: object
+ *     required:
+ *       - username
+ *       - password
+ *     properties:
+ *       username:
+ *         type: string
+ *       password:
+ *         type: string
+ *         format: password
+ *   LoginResponse:
+ *     type: object
+ *     properties:
+ *       refresh:
+ *         type: string
+ *       token:
+ *         type: string
+ *       profile:
+ *         $ref: '#/definitions/User'
+ *   User:
+ *     type: object
+ *     properties:
+ *       id:
+ *           type: integer
+ *           format: int64
+ */
 
 /**
  * @swagger
@@ -44,15 +80,36 @@ const authRouter = Router();
 /**
  * @swagger
  * /api/v1/auth/login:
- *   get:
- *     summary: login
+ *   post:
+ *     summary: Login
  *     tags: [Auth]
  *     description: login a user
+ *     parameters:
+ *       - name: username
+ *         description: Username or email
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: password
+ *         description: user password
+ *         in: body
+ *         required: true
+ *         type: string
  *     responses:
  *       200:
  *         description: logged in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/LoginResponse'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
  */
-authRouter.get('/login', authController.login);
+authRouter.post('/login', authController.login);
 
 const routeSocialProvider = (strategy: string, options: AuthenticateOptions) => {
   authRouter.get(`/${strategy}`, cache.cacheRedirectUrl, passport.authenticate(strategy, options));

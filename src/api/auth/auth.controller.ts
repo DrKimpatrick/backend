@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { environment } from '../../config/environment';
 import * as url from 'url';
 import cache from '../../shared/cache';
+import passport from 'passport';
 import { CREATED, SERVER_ERROR } from '../../constants/statusCodes';
 import { MODELS } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
@@ -12,8 +13,15 @@ import { ModelFactory } from '../../models/model.factory';
  *
  */
 export class AuthController {
-  login(req: Request, res: Response) {
-    return res.status(200).json({ message: 'Logged in' });
+  login(req: Request, res: Response, next: NextFunction) {
+    // Need username/password in body
+    return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+      if (passportUser) {
+        return res.json(passportUser.toAuthJSON());
+      }
+
+      return res.status(401).json(err || info);
+    })(req, res, next);
   }
 
   socialAuthCallback(req: Request, res: Response) {

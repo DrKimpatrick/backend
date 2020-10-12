@@ -3,24 +3,78 @@ import passport from 'passport';
 import StrategyMock from './__mocks__/strategy';
 import { socialAuthResponse } from './__mocks__/social-responses';
 import { app } from '../../index';
-import { CREATED, BAD_REQUEST } from '../../constants/statusCodes';
 import { ModelFactory } from '../../models/model.factory';
-import { MODELS } from '../../constants';
-
-const userM = ModelFactory.getModel(MODELS.USER);
+import { MODELS, SIGNUP_MODE } from '../../constants';
+import { BAD_REQUEST, CREATED } from '../../constants/statusCodes';
 
 describe('Auth /auth', () => {
+  const userM = ModelFactory.getModel(MODELS.USER);
+  const socialM = ModelFactory.getModel(MODELS.SOCIAL_AUTH);
+
   beforeEach(async () => {
     await userM.deleteMany({});
+    await socialM.deleteMany({});
   });
 
-  describe('GET /login', () => {
-    it('responds with json', (done: any) => {
+  describe('POST /login', () => {
+    it('responds with error missing credentials', (done: any) => {
       supertest(app)
-        .get('/api/v1/auth/login')
+        .post('/api/v1/auth/login')
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .end((req, res) => {
+          expect(res.status).toBe(401);
+          expect(res.body).toHaveProperty('message');
+          expect(res.body.message).toEqual('Missing credentials');
+
+          done();
+        });
+    });
+
+    it('responds with error invalid user or password', (done: any) => {
+      supertest(app)
+        .post('/api/v1/auth/login')
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send({ username: 'test@email.com', password: 'really' })
+        .expect('Content-Type', /json/)
+        .end((req, res) => {
+          expect(res.status).toBe(401);
+          expect(res.body).toHaveProperty('error');
+          expect(res.body.error).toEqual('username or password is invalid');
+
+          done();
+        });
+    });
+
+    it('responds with valid user details and token', async (done: any) => {
+      let user = await userM.create({
+        signupMode: SIGNUP_MODE.SOCIAL,
+        firstName: 'Some Name',
+        email: 'test@email.com',
+        username: 'test@email.com',
+        verified: true,
+        password: 'really',
+      });
+
+      supertest(app)
+        .post('/api/v1/auth/login')
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send({ username: 'test@email.com', password: 'really' })
+        .expect('Content-Type', /json/)
+        .end(async (req, res) => {
+          user = await userM.findById(user.id).select('+refreshToken').exec();
+
+          expect(res.status).toBe(200);
+          expect(res.body).toHaveProperty('refresh');
+          // @ts-ignore
+          expect(res.body.refresh).toEqual(user.refreshToken);
+          expect(res.body).toHaveProperty('token');
+          expect(res.body).toHaveProperty('profile');
+
+          done();
+        });
     });
   });
 

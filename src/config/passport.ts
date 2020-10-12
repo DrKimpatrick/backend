@@ -1,5 +1,6 @@
 import util from 'util';
 import passport from 'passport';
+import LocalStrategy from 'passport-local';
 import * as google from 'passport-google-oauth';
 import * as github from 'passport-github';
 import * as linkedin from 'passport-linkedin-oauth2';
@@ -8,6 +9,46 @@ import { environment } from './environment';
 import { ModelFactory } from '../models/model.factory';
 import { logger } from '../shared/winston';
 import { genRandomString } from '../helpers';
+
+export const localStrategy = new LocalStrategy.Strategy(
+  {
+    usernameField: 'username',
+    passwordField: 'password',
+    session: false,
+  },
+  async (username: string, password: string, next: (...args: any) => void) => {
+    const userM = ModelFactory.getModel(MODELS.USER);
+    const error = { error: 'username or password is invalid' };
+    try {
+      let user = await userM
+        .findOne({ $or: [{ username }, { email: username }] })
+        .select('+password')
+        .exec();
+      if (!user) {
+        return next(error, false);
+      }
+
+      const isValid = await user.validatePassword(password);
+
+      if (isValid) {
+        const encrypted = user.createRefreshToken();
+        user = await userM
+          .findByIdAndUpdate(
+            user.id,
+            { refreshToken: encrypted.data, authTag: encrypted.authTag },
+            { new: true }
+          )
+          .select('+refreshToken -__v')
+          .exec();
+        delete user.password;
+        return next(null, user);
+      }
+      return next(error, false);
+    } catch (err) {
+      return next({ error: err.message || err }, false);
+    }
+  }
+);
 
 const findEmailFromProvider = (
   provider: SOCIAL_AUTH_TYPES,
@@ -51,15 +92,31 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
       if (!user) {
         user = await userModal.create({
           signupMode: SIGNUP_MODE.SOCIAL,
-          fullName: profile.displayName,
+          firstName: profile.displayName,
           email: userEmail,
           password: genRandomString(),
+          username: userEmail,
+          verified: true,
         });
+        const encrypted = user.createRefreshToken();
+        user = await userModal
+          .findByIdAndUpdate(
+            user.id,
+            {
+              refreshToken: encrypted.data,
+              authTag: encrypted.authTag,
+            },
+            { new: true }
+          )
+          .exec();
       }
       socialUser = await socialModal
         .findByIdAndUpdate(socialUser.id, { user: user.id }, { new: true })
-        .populate('user')
+        .populate('user', '+refreshToken -__v')
         .exec();
+      if (socialUser.user) {
+        socialUser = socialUser.user;
+      }
     }
     return next(null, socialUser);
   } catch (err) {
@@ -101,3 +158,4 @@ export const linkedinStrategy = new linkedin.Strategy(
 passport.use(googleStrategy);
 passport.use(githubStrategy);
 passport.use(linkedinStrategy);
+passport.use(localStrategy);

@@ -52,3 +52,5 @@ logs/
 build/
 .env*
 .nyc_output/
+
+.vscode

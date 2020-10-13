@@ -1,6 +1,6 @@
 import { logger } from '../shared/winston';
 import path from 'path';
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 
 const trimTs = (pathD: string) => {
   return pathD.substr(0, pathD.length - 3);
@@ -14,7 +14,7 @@ class ModelFactory {
    * @param name
    * @returns {mongoose.Schema}
    */
-  static getModel(name: string): Model<any> {
+  static getModel<T extends Document = any>(name: string): Model<T> {
     if (!name) throw Error('Model name not provided');
     const modelName = name.toLowerCase();
     const filename = `${modelName}.model.ts`;

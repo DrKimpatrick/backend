@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
-import { environment } from '../../config/environment';
 import * as url from 'url';
+import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
 import passport from 'passport';
-import { CREATED, SERVER_ERROR } from '../../constants/statusCodes';
-import { MODELS } from '../../constants';
+import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
+import { Email, sendEmail } from '../../config/mailchimp';
+import { getWelcomeEmail } from '../../shared/email.templates';
+import IUser from '../../models/interfaces/user.interface';
+import { generateVerificationToken } from '../../helpers/auth.helpers';
+import { logger } from '../../shared/winston';
 
 /**
  * @function authController
@@ -40,26 +44,51 @@ export class AuthController {
     cache.remove('SOCIAL_AUTH_REDIRECT_URL');
     res.redirect(endpoint);
   }
+
   async register(req: Request, res: Response) {
     const { username, email, password } = req.body;
     try {
-      const userModel = ModelFactory.getModel(MODELS.USER);
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
       const user = await userModel.create({
         username,
         email,
         password,
       });
-      user.password = undefined;
-      const data = user.toAuthJSON();
+      const confirmationToken = generateVerificationToken(user.id);
+      const confirmationEmail: Email = {
+        html: await getWelcomeEmail(`${user.email}`, confirmationToken),
+        subject: 'Tech Talent Account Confirmation',
+        to: [{ email: user.email, type: 'to' }],
+      };
 
-      // send email
+      sendEmail(confirmationEmail);
 
-      return res.status(CREATED).json({
-        profile: user,
-        token: data.token,
+      return res.status(STATUS_CODES.CREATED).json({
+        message:
+          'Registration complete. An activation link has been sent to your email. Click it to verify your account',
       });
     } catch (error) {
-      return res.status(SERVER_ERROR).json({ error: error.message });
+      logger.error(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ error: 'Could not complete registration due to internal server error' });
+    }
+  }
+
+  async verifyUserAccount(req: Request, res: Response) {
+    try {
+      const userId = req?.currentUser?.id;
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      await userModel.findByIdAndUpdate(userId, { verified: true });
+
+      return res.status(STATUS_CODES.OK).json({
+        message: `Account verification complete. Login at ${environment.baseUrl}/api/v1/auth/login to access your account`,
+      });
+    } catch (error) {
+      logger.error(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ error: 'Could not verify user account due to internal server error' });
     }
   }
 }

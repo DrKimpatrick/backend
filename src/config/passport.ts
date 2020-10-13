@@ -28,6 +28,10 @@ export const localStrategy = new LocalStrategy.Strategy(
         return next(error, false);
       }
 
+      if (!user.verified) {
+        return next({ error: 'user account has not been verified' }, false);
+      }
+
       const isValid = await user.validatePassword(password);
 
       if (isValid) {

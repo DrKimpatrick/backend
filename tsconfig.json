@@ -15,7 +15,10 @@
     "importHelpers": true,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": [
+      "@types",
+      "node_modules/@types",
+    ],
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

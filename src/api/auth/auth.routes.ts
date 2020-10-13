@@ -3,12 +3,37 @@ import authController from './auth.controller';
 import passport, { AuthenticateOptions } from 'passport';
 import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
-import { validate, registerValidator } from '../../helpers/validator';
+import { validate, registrationValidator } from '../../helpers/request-validation.helpers';
+import { checkAccountVerificationToken } from '../../middleware/auth.middleware';
 
 const authRouter = Router();
+
 /**
  * @swagger
  * definition:
+ *   RegistrationError:
+ *     type: object
+ *     properties:
+ *       errors:
+ *         type: array
+ *         items:
+ *           type: object
+ *           properties:
+ *             value:
+ *               type: string
+ *             msg:
+ *               type: string
+ *             param:
+ *               type: string
+ *             location:
+ *               type: string
+ *   RegisterResponse:
+ *     type: object
+ *     properties:
+ *       profile:
+ *         $ref: '#/definitions/User'
+ *       token:
+ *         type: string
  *   Error:
  *     type: object
  *     properties:
@@ -39,40 +64,6 @@ const authRouter = Router();
  *     type: object
  *     properties:
  *       id:
- *           type: integer
- *           format: int64
- */
-
-/**
- * @swagger
- * definition:
- *   Error:
- *     type: object
- *     properties:
- *       errors:
- *         type: array
- *         items:
- *           type: object
- *           properties:
- *             value:
- *               type: string
- *             msg:
- *               type: string
- *             param:
- *               type: string
- *             location:
- *               type: string
- *   RegisterResponse:
- *     type: object
- *     properties:
- *       profile:
- *         $ref: '#/definitions/User'
- *       token:
- *         type: string
- *   User:
- *     type: object
- *     properties:
- *       _id:
  *           type: integer
  *           format: int64
  */
@@ -140,6 +131,7 @@ const routeSocialProvider = (strategy: string, options: AuthenticateOptions) => 
  *         description: redirect to Google prompt
  */
 routeSocialProvider('google', { scope: ['profile', 'email'] });
+
 /**
  * @swagger
  * /api/v1/auth/github:
@@ -158,6 +150,7 @@ routeSocialProvider('google', { scope: ['profile', 'email'] });
  *         description: redirect to Github prompt
  */
 routeSocialProvider('github', {});
+
 /**
  * @swagger
  * /api/v1/auth/linkedin:
@@ -176,6 +169,7 @@ routeSocialProvider('github', {});
  *         description: redirect to Linkedin prompt
  */
 routeSocialProvider('linkedin', {});
+
 /**
  * @swagger
  * /api/v1/auth/register:
@@ -212,8 +206,39 @@ routeSocialProvider('linkedin', {});
  *          content:
  *            application/json:
  *              schema:
+ *                $ref: '#definitions/RegistrationError'
+ */
+authRouter.post('/register', validate(registrationValidator()), authController.register);
+
+/**
+ * @swagger
+ * /api/v1/auth/verify-account:
+ *   get:
+ *     summary: Verify account
+ *     tags: [Auth]
+ *     description: Verify user account
+ *     parameters:
+ *       - name: token
+ *         description: account verification token
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Account verified
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       500:
+ *          description: Internal Server Error
+ *          content:
+ *            application/json:
+ *              schema:
  *                $ref: '#definitions/Error'
  */
-authRouter.post('/register', validate(registerValidator()), authController.register);
+authRouter.get('/verify-account', checkAccountVerificationToken, authController.verifyUserAccount);
 
 export { authRouter };

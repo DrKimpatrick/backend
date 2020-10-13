@@ -4,8 +4,9 @@ import StrategyMock from './__mocks__/strategy';
 import { socialAuthResponse } from './__mocks__/social-responses';
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
-import { MODELS, SIGNUP_MODE } from '../../constants';
-import { BAD_REQUEST, CREATED } from '../../constants/statusCodes';
+import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
+import { generateVerificationToken } from '../../helpers/auth.helpers';
+import { environment } from '../../config/environment';
 
 describe('Auth /auth', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -149,6 +150,7 @@ describe('Auth /auth', () => {
         });
     });
   });
+
   describe('POST /register', () => {
     const newUser = {
       email: 'test@test.com',
@@ -161,9 +163,8 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser)
         .end((err, res) => {
-          expect(res.status).toBe(CREATED);
-          expect(res.body).toHaveProperty('profile');
-          expect(res.body.token).not.toBeNull();
+          expect(res.status).toBe(STATUS_CODES.CREATED);
+          expect(res.body).toHaveProperty('message');
           done();
         });
     });
@@ -173,7 +174,7 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send({})
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body).toHaveProperty('errors');
           done();
         });
@@ -185,7 +186,7 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body).toHaveProperty('errors');
           done();
         });
@@ -200,8 +201,10 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser2)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
-          expect(res.body.errors[0].param).toBe('email');
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect(res.body.errors).toEqual(
+            expect.arrayContaining([expect.objectContaining({ param: 'email' })])
+          );
           done();
         });
     });
@@ -215,7 +218,7 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser3)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body.errors[0].param).toBe('username');
           done();
         });
@@ -230,8 +233,10 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser3)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
-          expect(res.body.errors[0].param).toBe('username');
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect(res.body.errors).toEqual(
+            expect.arrayContaining([expect.objectContaining({ param: 'username' })])
+          );
           done();
         });
     });
@@ -245,7 +250,7 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser4)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body.errors[0].param).toBe('password');
           done();
         });
@@ -260,11 +265,76 @@ describe('Auth /auth', () => {
         .post('/api/v1/auth/register')
         .send(newUser4)
         .end((err, res) => {
-          expect(res.status).toBe(BAD_REQUEST);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body.errors[0].param).toBe('password');
           expect(res.body.errors[0].msg).toBe(
             'Password must contain an uppercase, lowercase, numeric, special character (!@#$%^&*), and at least 8 characters'
           );
+          done();
+        });
+    });
+  });
+
+  describe('GET /account-verify', () => {
+    it('should verify user account', async (done) => {
+      let testUser = await userM.create({
+        email: 'testverify@test.com',
+        username: 'verifytester',
+        password: '#ThePassIs@strong',
+      });
+      const verificationToken = generateVerificationToken(testUser.id);
+      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+
+      supertest(app)
+        .get(verificationUrl)
+        .set('Accept', 'application/json')
+        .end(async (err, res) => {
+          testUser = await userM.findById(testUser.id);
+
+          expect(res.status).toBe(200);
+          expect(testUser).toEqual(expect.objectContaining({ verified: true }));
+          done();
+        });
+    });
+
+    it('should not verify user account without a token', async (done) => {
+      let testUser = await userM.create({
+        email: 'testverify@test.com',
+        username: 'verifytester',
+        password: '#ThePassIs@strong',
+      });
+      const verificationToken = '';
+      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+
+      supertest(app)
+        .get(verificationUrl)
+        .set('Accept', 'application/json')
+        .end(async (err, res) => {
+          testUser = await userM.findById(testUser.id);
+
+          expect(res.status).toBe(401);
+          expect(res.body).toHaveProperty('error');
+          done();
+        });
+    });
+
+    it('should not verify user account with and invalid token', async (done) => {
+      let testUser = await userM.create({
+        email: 'testverify@test.com',
+        username: 'verifytester',
+        password: '#ThePassIs@strong',
+      });
+      const verificationToken = 'invalid.obviously';
+      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+
+      supertest(app)
+        .get(verificationUrl)
+        .set('Accept', 'application/json')
+        .end(async (err, res) => {
+          testUser = await userM.findById(testUser.id);
+
+          expect(res.status).toBe(401);
+          expect(res.body).toHaveProperty('error');
           done();
         });
     });

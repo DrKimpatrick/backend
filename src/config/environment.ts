@@ -14,6 +14,8 @@ const environment = {
   linkedInClientSecret: process.env.LINKEDIN_CLIENT_SECRET || '',
   socialAuthCallBackUrl: process.env.SOCIAL_AUTH_CALLBACK_URL || '',
   socialAuthRedirectURL: process.env.SOCIAL_AUTH_REDIRECT_URL || '',
+  mailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
+  baseUrl: process.env.BASE_URL || '',
 };
 
 if (environment.env === 'test') {

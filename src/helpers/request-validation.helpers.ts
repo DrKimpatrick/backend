@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
-import { BAD_REQUEST } from '../constants/statusCodes';
-import { MODELS } from '../constants';
+import { MODELS, STATUS_CODES } from '../constants';
 import { ModelFactory } from '../models/model.factory';
 
 /**
@@ -19,7 +18,7 @@ export function validate(validations: any[]) {
       return next();
     }
 
-    return res.status(BAD_REQUEST).json({ errors: errors.array() });
+    return res.status(STATUS_CODES.BAD_REQUEST).json({ errors: errors.array() });
   };
 }
 
@@ -27,7 +26,7 @@ export function passwordValidator() {
   return [
     body('password', 'Password is required')
       .exists()
-      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/)
+      .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g)
       .withMessage(
         'Password must contain an uppercase, lowercase, numeric, special character (!@#$%^&*), and at least 8 characters'
       ),
@@ -37,10 +36,12 @@ export function passwordValidator() {
 export function usernameValidator() {
   const userModel = ModelFactory.getModel(MODELS.USER);
   return [
-    body('username', 'Username is required')
-      .notEmpty()
+    body('username')
+      .optional()
       .matches(/^[a-z0-9]{5,}$/)
-      .withMessage('Username must be a lowercase word with at least 5 no special characters')
+      .withMessage(
+        'Username must be a lowercase word with at least 5 character long with no special characters'
+      )
       .custom((value) => {
         return userModel.findOne({ username: value }).then((user: object) => {
           if (user) {
@@ -69,6 +70,6 @@ export function emailValidator() {
   ];
 }
 
-export function registerValidator() {
+export function registrationValidator() {
   return [...emailValidator(), ...usernameValidator(), ...passwordValidator()];
 }

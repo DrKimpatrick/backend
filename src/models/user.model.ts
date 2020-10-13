@@ -9,6 +9,7 @@ import {
   validatePassword,
 } from '../helpers/model.helpers';
 import { SIGNUP_MODE } from '../constants';
+import IUser from './interfaces/user.interface';
 
 const { Schema } = mongoose;
 
@@ -44,7 +45,6 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       unique: true,
-      required: [true, 'Username is required'],
     },
     password: {
       type: String,
@@ -91,4 +91,4 @@ userSchema.methods.generateJWTToken = generateJWTToken;
 userSchema.methods.toAuthJSON = toAuthJSON;
 userSchema.methods.createRefreshToken = createRefreshToken;
 
-export = mongoose.model('User', userSchema);
+export = mongoose.model<IUser>('User', userSchema);

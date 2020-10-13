@@ -5,7 +5,7 @@ import cors from 'cors';
 import swaggerUiExpress from 'swagger-ui-express';
 
 import { v1Router } from './api/router';
-import swaggerSpec from './config/swaggerSpec';
+import swaggerConfig from './config/swagger';
 import passport from 'passport';
 import cache from './shared/cache';
 
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use(
   '/api/v1/docs',
   swaggerUiExpress.serve,
-  swaggerUiExpress.setup(swaggerSpec, { explorer: true })
+  swaggerUiExpress.setup(swaggerConfig, { explorer: true })
 );
 
 app.use('/api/v1', v1Router);

@@ -1,6 +1,6 @@
 {
   "name": "techtalent-api",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "TechTalent backend API server",
   "main": "./src/index.ts",

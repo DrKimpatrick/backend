@@ -10,6 +10,6 @@ export default interface IUser extends Document {
   email: string;
   username?: string;
   password: string;
-  roles?: [USER_ROLES];
+  roles: USER_ROLES[];
   verified?: boolean;
 }

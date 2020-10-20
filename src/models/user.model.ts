@@ -1,15 +1,9 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
-import {
-  createRefreshToken,
-  generateJWTToken,
-  getUserFullName,
-  saveUser,
-  toAuthJSON,
-  validatePassword,
-} from '../helpers/model.helpers';
+import { getUserFullName, saveUser, toAuthJSON, validatePassword } from '../helpers/model.helpers';
 import { SIGNUP_MODE } from '../constants';
 import IUser from './interfaces/user.interface';
+import { generateAccessToken, generateRefreshToken } from '../helpers/auth.helpers';
 
 const { Schema } = mongoose;
 
@@ -51,21 +45,11 @@ const userSchema = new Schema(
       required: [true, 'A password is required'],
       select: false,
     },
-    refreshToken: {
-      type: String,
-      required: false,
-      select: false,
-    },
-    authTag: {
-      type: String,
-      required: false,
-      select: false,
-    },
     roles: {
       type: [String],
-      default: 'talent',
       enum: [
         'talent',
+        'education',
         'super_admin',
         'recruitment_admin',
         'hr_admin',
@@ -73,6 +57,7 @@ const userSchema = new Schema(
         'training_admin',
         'training_affiliate',
       ],
+      required: [true, 'A valid user role is required'],
     },
     verified: {
       type: Boolean,
@@ -87,8 +72,8 @@ userSchema.virtual('name').get(getUserFullName);
 userSchema.pre('save', saveUser);
 
 userSchema.methods.validatePassword = validatePassword;
-userSchema.methods.generateJWTToken = generateJWTToken;
+userSchema.methods.generateAccessToken = generateAccessToken;
 userSchema.methods.toAuthJSON = toAuthJSON;
-userSchema.methods.createRefreshToken = createRefreshToken;
+userSchema.methods.generateRefreshToken = generateRefreshToken;
 
 export = mongoose.model<IUser>('User', userSchema);

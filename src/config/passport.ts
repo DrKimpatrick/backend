@@ -20,7 +20,7 @@ export const localStrategy = new LocalStrategy.Strategy(
     const userM = ModelFactory.getModel(MODELS.USER);
     const error = { error: 'username or password is invalid' };
     try {
-      let user = await userM
+      const user = await userM
         .findOne({ $or: [{ username }, { email: username }] })
         .select('+password')
         .exec();
@@ -35,16 +35,6 @@ export const localStrategy = new LocalStrategy.Strategy(
       const isValid = await user.validatePassword(password);
 
       if (isValid) {
-        const encrypted = user.createRefreshToken();
-        user = await userM
-          .findByIdAndUpdate(
-            user.id,
-            { refreshToken: encrypted.data, authTag: encrypted.authTag },
-            { new: true }
-          )
-          .select('+refreshToken -__v')
-          .exec();
-        delete user.password;
         return next(null, user);
       }
       return next(error, false);
@@ -102,17 +92,6 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
           username: userEmail,
           verified: true,
         });
-        const encrypted = user.createRefreshToken();
-        user = await userModal
-          .findByIdAndUpdate(
-            user.id,
-            {
-              refreshToken: encrypted.data,
-              authTag: encrypted.authTag,
-            },
-            { new: true }
-          )
-          .exec();
       }
       socialUser = await socialModal
         .findByIdAndUpdate(socialUser.id, { user: user.id }, { new: true })

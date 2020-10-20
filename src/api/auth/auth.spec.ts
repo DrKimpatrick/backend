@@ -1,12 +1,12 @@
 import supertest from 'supertest';
 import passport from 'passport';
+import faker from 'faker';
 import StrategyMock from './__mocks__/strategy';
 import { socialAuthResponse } from './__mocks__/social-responses';
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
 import { generateVerificationToken } from '../../helpers/auth.helpers';
-import { environment } from '../../config/environment';
 
 describe('Auth /auth', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -49,13 +49,14 @@ describe('Auth /auth', () => {
     });
 
     it('responds with valid user details and token', async (done: any) => {
-      let user = await userM.create({
+      await userM.create({
         signupMode: SIGNUP_MODE.SOCIAL,
         firstName: 'Some Name',
         email: 'test@email.com',
         username: 'test@email.com',
         verified: true,
         password: 'really',
+        roles: ['talent'],
       });
 
       supertest(app)
@@ -65,12 +66,8 @@ describe('Auth /auth', () => {
         .send({ username: 'test@email.com', password: 'really' })
         .expect('Content-Type', /json/)
         .end(async (req, res) => {
-          user = await userM.findById(user.id).select('+refreshToken').exec();
-
           expect(res.status).toBe(200);
           expect(res.body).toHaveProperty('refresh');
-          // @ts-ignore
-          expect(res.body.refresh).toEqual(user.refreshToken);
           expect(res.body).toHaveProperty('token');
           expect(res.body).toHaveProperty('profile');
 
@@ -156,6 +153,7 @@ describe('Auth /auth', () => {
       email: 'test@test.com',
       username: 'testname',
       password: '@Password123',
+      role: 'talent',
     };
 
     it('should be able to register user', (done) => {
@@ -203,7 +201,7 @@ describe('Auth /auth', () => {
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body.errors).toEqual(
-            expect.arrayContaining([expect.objectContaining({ param: 'email' })])
+            expect.arrayContaining([expect.objectContaining({ email: expect.any(String) })])
           );
           done();
         });
@@ -219,7 +217,7 @@ describe('Auth /auth', () => {
         .send(newUser3)
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
-          expect(res.body.errors[0].param).toBe('username');
+          expect.arrayContaining([expect.objectContaining({ username: expect.any(String) })]);
           done();
         });
     });
@@ -235,7 +233,7 @@ describe('Auth /auth', () => {
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body.errors).toEqual(
-            expect.arrayContaining([expect.objectContaining({ param: 'username' })])
+            expect.arrayContaining([expect.objectContaining({ username: expect.any(String) })])
           );
           done();
         });
@@ -251,7 +249,7 @@ describe('Auth /auth', () => {
         .send(newUser4)
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
-          expect(res.body.errors[0].param).toBe('password');
+          expect.arrayContaining([expect.objectContaining({ password: expect.any(String) })]);
           done();
         });
     });
@@ -266,10 +264,7 @@ describe('Auth /auth', () => {
         .send(newUser4)
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
-          expect(res.body.errors[0].param).toBe('password');
-          expect(res.body.errors[0].msg).toBe(
-            'Password must contain an uppercase, lowercase, numeric, special character (!@#$%^&*), and at least 8 characters'
-          );
+          expect.arrayContaining([expect.objectContaining({ password: expect.any(String) })]);
           done();
         });
     });
@@ -335,6 +330,96 @@ describe('Auth /auth', () => {
 
           expect(res.status).toBe(401);
           expect(res.body).toHaveProperty('error');
+          done();
+        });
+    });
+  });
+
+  describe('GET /refresh', () => {
+    it('should give new access token with a valid refresh token', async (done) => {
+      const email = faker.internet.email();
+      const username = faker.internet.userName();
+      const password = 'easy.password';
+      await userM.create({
+        signupMode: SIGNUP_MODE.LOCAL,
+        firstName: faker.name.firstName(),
+        email,
+        username,
+        verified: true,
+        password,
+        roles: ['talent'],
+      });
+
+      supertest(app)
+        .post('/api/v1/auth/login')
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send({ username, password })
+        .expect('Content-Type', /json/)
+        .end(async (req, res) => {
+          const refreshToken = res.body.refresh;
+
+          supertest(app)
+            .get('/api/v1/auth/refresh')
+            .set('Accept', 'application/json')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${refreshToken}`)
+            .expect('Content-Type', /json/)
+            .end(async (req, res) => {
+              expect(res.status).toBe(STATUS_CODES.OK);
+              expect(res.body).toEqual(expect.objectContaining({ token: expect.any(String) }));
+              done();
+            });
+        });
+    });
+
+    it('should not give new access token with an invalid refresh token', async (done) => {
+      const email = faker.internet.email();
+      const username = faker.internet.userName();
+      const password = 'easier.password';
+      await userM.create({
+        signupMode: SIGNUP_MODE.LOCAL,
+        firstName: faker.name.firstName(),
+        email,
+        username,
+        verified: true,
+        password,
+        roles: ['talent'],
+      });
+
+      supertest(app)
+        .post('/api/v1/auth/login')
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send({ username, password })
+        .expect('Content-Type', /json/)
+        .end(async (req, res) => {
+          const refreshToken = res.body.refresh + 'invalid';
+
+          supertest(app)
+            .get('/api/v1/auth/refresh')
+            .set('Accept', 'application/json')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${refreshToken}`)
+            .expect('Content-Type', /json/)
+            .end(async (req, res) => {
+              expect(res.status).toBe(STATUS_CODES.UNAUTHORIZED);
+              expect(res.body).toEqual(expect.objectContaining({ message: expect.any(String) }));
+              done();
+            });
+        });
+    });
+
+    it('should not give new access token with a missing refresh token', async (done) => {
+      supertest(app)
+        .get('/api/v1/auth/refresh')
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .set('Authorization', '')
+        .expect('Content-Type', /json/)
+        .end(async (req, res) => {
+          expect(res.status).toBe(STATUS_CODES.UNAUTHORIZED);
+          expect(res.body).toEqual(expect.objectContaining({ message: expect.any(String) }));
           done();
         });
     });

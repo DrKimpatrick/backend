@@ -3,13 +3,20 @@ import authController from './auth.controller';
 import passport, { AuthenticateOptions } from 'passport';
 import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
-import { validate, registrationValidator } from '../../helpers/request-validation.helpers';
-import { checkAccountVerificationToken } from '../../middleware/auth.middleware';
+import { validate, registrationRules } from '../../helpers/request-validation.helpers';
+import { requireToken } from '../../middleware/auth.middleware';
 
 const authRouter = Router();
 
 /**
  * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
  * definition:
  *   RegistrationError:
  *     type: object
@@ -66,6 +73,16 @@ const authRouter = Router();
  *       id:
  *           type: integer
  *           format: int64
+ *   RefreshSuccessResponse:
+ *     type: object
+ *     properties:
+ *       token:
+ *         type: string
+ *   RefreshFailureResponse:
+ *     type: object
+ *     properties:
+ *       message:
+ *         type: string
  */
 
 /**
@@ -208,7 +225,7 @@ routeSocialProvider('linkedin', {});
  *              schema:
  *                $ref: '#definitions/RegistrationError'
  */
-authRouter.post('/register', validate(registrationValidator()), authController.register);
+authRouter.post('/register', validate(registrationRules()), authController.register);
 
 /**
  * @swagger
@@ -239,6 +256,36 @@ authRouter.post('/register', validate(registrationValidator()), authController.r
  *              schema:
  *                $ref: '#definitions/Error'
  */
-authRouter.get('/verify-account', checkAccountVerificationToken, authController.verifyUserAccount);
+authRouter.get('/verify-account', requireToken(true), authController.verifyUserAccount);
+
+/**
+ * @swagger
+ * /api/v1/auth/refresh:
+ *   get:
+ *     summary: Get a new access token
+ *     tags: [Auth]
+ *     description: Returns a new access token by providing a valid refresh token
+ *     parameters:
+ *       - name: Authorization
+ *         description: Bearer token
+ *         in: headers
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/RefreshSuccessResponse'
+ *       401:
+ *         description: Failed
+ *         content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/RefreshFailureResponse'
+ */
+authRouter.get('/refresh', authController.refreshToken);
 
 export { authRouter };

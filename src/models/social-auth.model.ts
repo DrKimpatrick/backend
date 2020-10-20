@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { SOCIAL_AUTH_TYPES } from '../constants';
-import { generateJWTToken, toAuthJSON } from '../helpers/model.helpers';
+import { generateAccessToken } from '../helpers/auth.helpers';
+import { toAuthJSON } from '../helpers/model.helpers';
 
 const socialAuthSchema = new mongoose.Schema({
   provider: {
@@ -29,7 +30,7 @@ const socialAuthSchema = new mongoose.Schema({
   },
 });
 
-socialAuthSchema.methods.generateJWTToken = generateJWTToken;
+socialAuthSchema.methods.generateJWTToken = generateAccessToken;
 socialAuthSchema.methods.toAuthJSON = toAuthJSON;
 
 export = mongoose.model('SocialAuth', socialAuthSchema);

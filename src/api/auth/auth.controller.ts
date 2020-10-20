@@ -1,15 +1,22 @@
 import { NextFunction, Request, Response } from 'express';
 import * as url from 'url';
-import { environment } from '../../config/environment';
-import cache from '../../shared/cache';
 import passport from 'passport';
+import jsonwebtoken from 'jsonwebtoken';
+
+import cache from '../../shared/cache';
+import IUser from '../../models/interfaces/user.interface';
+import { environment } from '../../config/environment';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/mailchimp';
 import { getWelcomeEmail } from '../../shared/email.templates';
-import IUser from '../../models/interfaces/user.interface';
-import { generateVerificationToken } from '../../helpers/auth.helpers';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  generateVerificationToken,
+} from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
+import { BaseTokenPayload } from '../../interfaces';
 
 /**
  * @function authController
@@ -46,13 +53,14 @@ export class AuthController {
   }
 
   async register(req: Request, res: Response) {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
     try {
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
       const user = await userModel.create({
         username,
         email,
         password,
+        roles: [role],
       });
       const confirmationToken = generateVerificationToken(user.id);
       const confirmationEmail: Email = {
@@ -89,6 +97,34 @@ export class AuthController {
       return res
         .status(STATUS_CODES.SERVER_ERROR)
         .json({ error: 'Could not verify user account due to internal server error' });
+    }
+  }
+
+  async refreshToken(req: Request, res: Response) {
+    try {
+      const refreshToken = req.headers.authorization?.split(' ')[1];
+
+      if (!refreshToken) {
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'Token is missing' });
+      }
+
+      const { userId } = jsonwebtoken.decode(refreshToken) as BaseTokenPayload;
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      const user = await userModel.findById(userId).select('+password');
+
+      if (!user) {
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'User not found' });
+      }
+
+      // secret + user password hash combination allows us to bypass need of db
+      const secret = environment.secretKey + user.password;
+      jsonwebtoken.verify(refreshToken, secret);
+      const newToken = generateAccessToken(user.id, user.roles);
+
+      return res.status(STATUS_CODES.OK).json({ token: newToken });
+    } catch (error) {
+      logger.error(error.message);
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
     }
   }
 }

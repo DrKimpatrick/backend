@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { body, validationResult } from 'express-validator';
-import { MODELS, STATUS_CODES } from '../constants';
+import { body, ValidationChain, validationResult } from 'express-validator';
+import { MODELS, STATUS_CODES, USER_ROLES } from '../constants';
 import { ModelFactory } from '../models/model.factory';
 
 /**
@@ -9,7 +9,7 @@ import { ModelFactory } from '../models/model.factory';
  * @param {any[]} validations - Validation rules
  * @return {object} errors
  */
-export function validate(validations: any[]) {
+export function validate(validations: ValidationChain[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     await Promise.all(validations.map((validation) => validation.run(req)));
 
@@ -18,7 +18,10 @@ export function validate(validations: any[]) {
       return next();
     }
 
-    return res.status(STATUS_CODES.BAD_REQUEST).json({ errors: errors.array() });
+    const extractedErrors: any = [];
+    errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
+
+    return res.status(STATUS_CODES.BAD_REQUEST).json({ errors: extractedErrors });
   };
 }
 
@@ -26,9 +29,9 @@ export function passwordValidator() {
   return [
     body('password', 'Password is required')
       .exists()
-      .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g)
+      .matches(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&#])([a-zA-Z0-9@$!%*?&#]{8,})$/)
       .withMessage(
-        'Password must contain an uppercase, lowercase, numeric, special character (!@#$%^&*), and at least 8 characters'
+        'Password must be at least 8 character long and contain at least one uppercase, lowercase, numeric and a special character (@$!%*?&#)'
       ),
   ];
 }
@@ -70,6 +73,18 @@ export function emailValidator() {
   ];
 }
 
-export function registrationValidator() {
-  return [...emailValidator(), ...usernameValidator(), ...passwordValidator()];
+function roleValidator() {
+  const validRoles = Object.values(USER_ROLES).filter((role) => role !== USER_ROLES.SUPER_ADMIN);
+  return [
+    body('role', 'Valid user role is required')
+      .exists()
+      .isIn(validRoles)
+      .withMessage(
+        'Role must be one of the valid user roles (talent, education, recruitment_admin, hr_admin, company_admin, training_admin, training_affiliate)'
+      ),
+  ];
+}
+
+export function registrationRules() {
+  return [...emailValidator(), ...usernameValidator(), ...passwordValidator(), ...roleValidator()];
 }

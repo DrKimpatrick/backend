@@ -1,10 +1,9 @@
 import { USER_ROLES } from '../constants';
 
-export interface AccountVerificationTokenPayload {
-  id: string;
+export interface BaseTokenPayload {
+  userId: string;
 }
 
-export interface AccessTokenPayload {
-  id: string;
+export interface AccessTokenPayload extends BaseTokenPayload {
   roles: [USER_ROLES];
 }

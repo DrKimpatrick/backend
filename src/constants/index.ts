@@ -9,9 +9,41 @@ export enum SIGNUP_MODE {
   LOCAL = 'LOCAL',
 }
 
+export enum SKILL_VERIFICATION_STATUS {
+  UNVERIFIED = 'unverified',
+  IN_PROGRESS = 'inProgress',
+  VERIFIED = 'verified',
+}
+
+export enum SKILL_LEVEL {
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced',
+}
+
+export enum DOCUMENT_ACTION {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+}
+
+export enum PAYMENT_STATUS {
+  UNPAID = 'unpaid',
+  FAILED = 'failed',
+  CONFIRMED = 'confirmed',
+}
+
+export enum FEATURE_CHOICE {
+  PREMIUM = 'premium',
+  FREE = 'free',
+}
+
 export const MODELS = {
   USER: 'user',
   SOCIAL_AUTH: 'social-auth',
+  SKILLS: 'skill',
+  EDUCATION_HISTORY: 'education-history',
+  EMPLOYMENT_HISTORY: 'employment-history',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';

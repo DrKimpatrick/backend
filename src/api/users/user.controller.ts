@@ -1,1 +1,122 @@
-// TODO: user controller
+import { Request, Response } from 'express';
+import { ModelFactory } from '../../models/model.factory';
+import { DOCUMENT_ACTION, MODELS, STATUS_CODES } from '../../constants';
+
+/**
+ * @function UserController
+ * @description Handles all user related business logic
+ *
+ */
+export class UserController {
+  profileEdit = async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.id;
+      const { password, skills } = req.body;
+      let { employmentHistory, educationHistory } = req.body;
+
+      if (password) delete req.body.password;
+
+      // validate Skills
+      if (skills) {
+        const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+        let records = await skillModel.find().where('_id').in(skills).select('_id').exec();
+        records = records.map((x) => x._id.toString());
+
+        const notFound = skills.filter((id: string) => !records.includes(id));
+        if (notFound.length > 0) {
+          return res
+            .status(STATUS_CODES.NOT_FOUND)
+            .json({ message: `Skills '${notFound}', could not be found` });
+        }
+      }
+
+      // validate employmentHistory
+      if (employmentHistory) {
+        const empH = await this.editUserEmpEduHistory(MODELS.EMPLOYMENT_HISTORY, employmentHistory);
+        if (!!empH.error) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({ message: empH.error });
+        }
+        employmentHistory = empH.data;
+      }
+
+      // validate educationHistory
+      if (educationHistory) {
+        const eduH = await this.editUserEmpEduHistory(MODELS.EDUCATION_HISTORY, educationHistory);
+        if (!!eduH.error) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({ message: eduH.error });
+        }
+        educationHistory = eduH.data;
+      }
+
+      const userModel = ModelFactory.getModel(MODELS.USER);
+      const user = await userModel
+        .findByIdAndUpdate(
+          userId,
+          {
+            ...req.body,
+            employmentHistory,
+            educationHistory,
+          },
+          { new: true }
+        )
+        .exec();
+      if (user == null) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
+      }
+
+      return res.json({ profile: user });
+    } catch (e) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: `Error: ${e.message}` });
+    }
+  };
+
+  private editUserEmpEduHistory = async (
+    modelName: string,
+    data: any[]
+  ): Promise<{ error: string | null; data: any }> => {
+    const model = ModelFactory.getModel(modelName);
+
+    let newDocs = data.filter((x: any) => x.action.toLowerCase() === DOCUMENT_ACTION.CREATE);
+    const updateDocs = data.filter((x: any) => x.action.toLowerCase() === DOCUMENT_ACTION.UPDATE);
+    const deleteDocs = data.filter((x: any) => x.action.toLowerCase() === DOCUMENT_ACTION.DELETE);
+
+    // Find all existing docs and verify they exist
+    const mergeExisting = [...updateDocs, ...deleteDocs];
+    const ids = mergeExisting.map((x: any) => x.id || x._id);
+    let found = await model.find().where('_id').in(ids).select('_id').exec();
+    found = found.map((x) => x._id.toString());
+    // filter those that were not found in the DB
+    const notFound = ids.filter((id: string) => !found.includes(id));
+    if (notFound.length > 0) {
+      return { error: `Doc(s) '${notFound}', could not be found`, data: null };
+    }
+
+    // DO update the existing ones
+    for (const doc of updateDocs) {
+      const id = doc.id || doc._id;
+      delete doc.id;
+      delete doc._id;
+      delete doc.action;
+      await model.findByIdAndUpdate(id, doc).exec();
+    }
+    // DO Delete the existing ones
+    if (deleteDocs.length > 0) {
+      const ids1 = deleteDocs.map((x: any) => x.id || x._id);
+      await model.deleteMany({ _id: { $in: ids1 } }).exec();
+    }
+    // also crete the new ones
+    if (newDocs.length > 0) {
+      newDocs = newDocs.map((x) => {
+        delete x.action;
+        return x;
+      });
+      newDocs = await model.create(newDocs);
+    }
+
+    return { error: null, data: [...updateDocs, ...newDocs].map((c) => c._id) };
+  };
+}
+
+const userController = new UserController();
+
+export default userController;

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
 import { getUserFullName, saveUser, toAuthJSON, validatePassword } from '../helpers/model.helpers';
-import { SIGNUP_MODE } from '../constants';
+import { FEATURE_CHOICE, PAYMENT_STATUS, SIGNUP_MODE } from '../constants';
 import IUser from './interfaces/user.interface';
 import { generateAccessToken, generateRefreshToken } from '../helpers/auth.helpers';
 
@@ -63,6 +63,38 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    featureChoice: {
+      type: FEATURE_CHOICE,
+      default: FEATURE_CHOICE.FREE,
+    },
+    paymentStatus: {
+      type: PAYMENT_STATUS,
+      default: PAYMENT_STATUS.UNPAID,
+    },
+    skills: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Skills',
+        required: false,
+        default: null,
+      },
+    ],
+    employmentHistory: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'EmploymentHistory',
+        required: false,
+        default: null,
+      },
+    ],
+    educationHistory: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'EducationHistory',
+        required: false,
+        default: null,
+      },
+    ],
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

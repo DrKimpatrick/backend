@@ -1,4 +1,6 @@
 import jsonwebtoken from 'jsonwebtoken';
+import express_jwt from 'express-jwt';
+import { Request } from 'express';
 import { environment } from '../config/environment';
 import { USER_ROLES } from '../constants';
 
@@ -31,4 +33,30 @@ export const generateRefreshToken = (userId: string, passwordHash: string, expir
     secret,
     { expiresIn: expiry }
   );
+};
+
+const getTokenFromHeaders = (req: Request) => {
+  const {
+    headers: { authorization },
+  } = req;
+  if (authorization && authorization.split(' ')[0].toLowerCase() === 'bearer') {
+    return authorization.split(' ')[1];
+  }
+  return null;
+};
+
+export const auth = {
+  required: express_jwt({
+    secret: environment.secretKey,
+    userProperty: 'payload',
+    algorithms: ['HS256'],
+    getToken: getTokenFromHeaders,
+  }),
+  optional: express_jwt({
+    secret: environment.secretKey,
+    userProperty: 'payload',
+    algorithms: ['HS256'],
+    getToken: getTokenFromHeaders,
+    credentialsRequired: false,
+  }),
 };

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, ValidationChain, validationResult } from 'express-validator';
 import { MODELS, STATUS_CODES, USER_ROLES } from '../constants';
+import IBetaTester from '../models/interfaces/beta-tester.interface';
 import { ModelFactory } from '../models/model.factory';
 
 /**
@@ -98,4 +99,26 @@ function roleValidator() {
 
 export function registrationRules() {
   return [...emailValidator(), ...usernameValidator(), ...passwordValidator()];
+}
+
+export function newBetaTesterRules() {
+  const betaTersModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
+  return [
+    body('email', 'Valid email is required')
+      .isEmail()
+      .normalizeEmail()
+      .custom((value) => {
+        return betaTersModel.findOne({ email: value }).then((user) => {
+          if (user) {
+            return Promise.reject('This email address is already part of the beta programme');
+          }
+          return true;
+        });
+      }),
+    body('name', 'name must have a value').notEmpty({ ignore_whitespace: true }),
+    body('accountType', 'accountType must have a value')
+      .notEmpty({ ignore_whitespace: true })
+      .isIn(['company', 'school', 'talent'])
+      .withMessage('accountType must be one of the following: (company, school, talent)'),
+  ];
 }

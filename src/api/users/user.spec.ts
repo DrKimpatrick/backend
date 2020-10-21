@@ -1,4 +1,5 @@
 import supertest from 'supertest';
+import faker from 'faker';
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
@@ -7,12 +8,14 @@ import {
   updateWrongEducationProfileData,
   updateWrongSkillsData,
 } from './__mocks__';
+import IBetaTester from '../../models/interfaces/beta-tester.interface';
 
 describe('User /users', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
   const skillModel = ModelFactory.getModel(MODELS.SKILLS);
   const empModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
   const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
+  const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
 
   let token: any;
   let user: any;
@@ -22,6 +25,7 @@ describe('User /users', () => {
     await skillModel.deleteMany({});
     await empModel.deleteMany({});
     await eduModel.deleteMany({});
+    await betaTesterModel.deleteMany({});
 
     user = await userM.create({
       signupMode: SIGNUP_MODE.LOCAL,
@@ -39,6 +43,7 @@ describe('User /users', () => {
     await skillModel.deleteMany({});
     await empModel.deleteMany({});
     await eduModel.deleteMany({});
+    await betaTesterModel.deleteMany({});
   });
 
   describe('PATCH /users/:id', () => {
@@ -99,6 +104,76 @@ describe('User /users', () => {
           expect(res.body).toHaveProperty('profile');
           expect(res.body.profile).toHaveProperty('email');
           expect(res.body.profile.email).toEqual(correctUserProfileData.email);
+          done();
+        });
+    });
+  });
+
+  describe('POST /users/beta-testers', () => {
+    // const tester = await betaTesterModel.create({
+    //   email: faker.internet.email(),
+    //   name: faker.name.findName(),
+    //   accountType: faker.random.arrayElement(['company', 'talent']),
+    // });
+
+    it('should successfully save beta tester information with valid data', (done) => {
+      supertest(app)
+        .post('/api/v1/users/beta-testers')
+        .send({
+          email: faker.internet.email(),
+          name: faker.name.findName(),
+          accountType: faker.random.arrayElement(['company', 'talent']),
+        })
+        .end((err, res) => {
+          expect(res.status).toBe(201);
+          expect(res.body).toHaveProperty('data');
+          expect(res.body.data).toHaveProperty('email');
+          done();
+        });
+    });
+
+    it('should not save beta tester information with an empty request body', (done) => {
+      supertest(app)
+        .post('/api/v1/users/beta-testers')
+        .send({})
+        .end((err, res) => {
+          expect(res.status).toBe(400);
+          expect(res.body).toHaveProperty('errors');
+          expect(res.body.errors).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                name: expect.any(String),
+              }),
+              expect.objectContaining({
+                email: expect.any(String),
+              }),
+              expect.objectContaining({
+                accountType: expect.any(String),
+              }),
+            ])
+          );
+          done();
+        });
+    });
+
+    it('should not save beta tester information with an invalid email', (done) => {
+      supertest(app)
+        .post('/api/v1/users/beta-testers')
+        .send({
+          email: 'invalid',
+          name: faker.name.findName(),
+          accountType: faker.random.arrayElement(['company', 'talent', 'school']),
+        })
+        .end((err, res) => {
+          expect(res.status).toBe(400);
+          expect(res.body).toHaveProperty('errors');
+          expect(res.body.errors).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                email: expect.any(String),
+              }),
+            ])
+          );
           done();
         });
     });

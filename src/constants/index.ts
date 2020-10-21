@@ -44,6 +44,7 @@ export const MODELS = {
   SKILLS: 'skill',
   EDUCATION_HISTORY: 'education-history',
   EMPLOYMENT_HISTORY: 'employment-history',
+  BETA_TESTER: 'beta-tester',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';

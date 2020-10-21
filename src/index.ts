@@ -31,8 +31,10 @@ app.use(
   swaggerUiExpress.setup(swaggerConfig, { explorer: true })
 );
 
-// @ts-ignore
-const noAuthPaths: string[] = [new RegExp(`${prefix}/auth*`, 'i')];
+const noAuthPaths = [
+  new RegExp(`${prefix}/auth*`, 'i'),
+  new RegExp(`${prefix}/users/beta-testers`, 'i'),
+];
 
 app.all(
   '*',

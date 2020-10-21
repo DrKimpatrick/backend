@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { DOCUMENT_ACTION, MODELS, STATUS_CODES } from '../../constants';
+import IBetaTester from '../../models/interfaces/beta-tester.interface';
+import { logger } from '../../shared/winston';
 
 /**
  * @function UserController
@@ -8,6 +10,24 @@ import { DOCUMENT_ACTION, MODELS, STATUS_CODES } from '../../constants';
  *
  */
 export class UserController {
+  async addBetaTester(req: Request, res: Response) {
+    try {
+      const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
+      const { accountType, name, email } = req.body;
+      const newBetaTester = await betaTesterModel.create({ accountType, name, email });
+
+      return res.status(STATUS_CODES.CREATED).json({
+        message: 'Your data is saved, you will be informed once the beta programme is ready',
+        data: newBetaTester,
+      });
+    } catch (error) {
+      logger.error(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ error: 'Could not save user information due to internal server error' });
+    }
+  }
+
   profileEdit = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;

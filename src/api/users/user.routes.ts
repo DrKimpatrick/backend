@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import userController from './user.controller';
 import { userProfileRules } from '../../helpers/user-profile-validation.helper';
-import { validate } from '../../helpers/request-validation.helpers';
+import { newBetaTesterRules, validate } from '../../helpers/request-validation.helpers';
 
 const userRouter = Router();
 /**
@@ -125,6 +125,14 @@ const userRouter = Router();
  *          $ref: '#/definitions/EmploymentHistory'
  *        educationHistory:
  *          $ref: '#/definitions/EducationHistory'
+ *
+ *   BetaTester:
+ *     type: object
+ *     properties:
+ *       data:
+ *         type: object
+ *       message:
+ *         type: string
  */
 
 /**
@@ -171,5 +179,38 @@ const userRouter = Router();
  *                $ref: '#definitions/ValidationError'
  */
 userRouter.patch('/:id', validate(userProfileRules()), userController.profileEdit);
+
+/**
+ * @swagger
+ * /api/v1/users/beta-testers:
+ *   post:
+ *     summary: Register for beta programme
+ *     tags: [Users]
+ *     description: Saves users information for beta testing
+ *     parameters:
+ *       - name: email
+ *         description: user email
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: name
+ *         description: User's full name
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: accountType
+ *         description: Desired account type
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Beta tester information saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/BetaTester'
+ */
+userRouter.post('/beta-testers', validate(newBetaTesterRules()), userController.addBetaTester);
 
 export { userRouter };

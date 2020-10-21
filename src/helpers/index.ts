@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import jsonwebtoken from 'jsonwebtoken';
 import { environment } from '../config/environment';
 
 export const genRandomString = () => {
@@ -23,4 +24,20 @@ export const decrypt = (encrypted: string, authTag: string): string => {
   decrypted += decipher.final('utf8');
 
   return decrypted;
+};
+
+/**
+ * @function generateJWTToken
+ * @description function to generate a jwt token
+ * @param {object} data - data to passe in a token, e.g {id: user.id}
+ * @param {number} expiresIn - expiration time in seconds
+ */
+export const generateJWTToken = (data: object, expiresIn: number = 3600) => {
+  return jsonwebtoken.sign(
+    {
+      ...data,
+      exp: Math.floor(Date.now() / 1000) + expiresIn,
+    },
+    environment.secretKey
+  );
 };

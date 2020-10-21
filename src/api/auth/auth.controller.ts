@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import * as url from 'url';
+import path from 'path';
+import { environment } from '../../config/environment';
+import cache from '../../shared/cache';
 import passport from 'passport';
 import jsonwebtoken from 'jsonwebtoken';
-
-import cache from '../../shared/cache';
 import IUser from '../../models/interfaces/user.interface';
-import { environment } from '../../config/environment';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/mailchimp';
-import { getWelcomeEmail } from '../../shared/email.templates';
+import { getEmailTemplate } from '../../shared/email.templates';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -17,6 +17,7 @@ import {
 } from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
 import { BaseTokenPayload } from '../../interfaces';
+import { generateJWTToken } from '../../helpers/';
 
 /**
  * @function authController
@@ -53,18 +54,24 @@ export class AuthController {
   }
 
   async register(req: Request, res: Response) {
-    const { username, email, password, role } = req.body;
+    const { username, email, password } = req.body;
     try {
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
       const user = await userModel.create({
         username,
         email,
         password,
-        roles: [role],
       });
       const confirmationToken = generateVerificationToken(user.id);
+      const pathToTemplate = path.join(__dirname, '../../', 'templates/account-confirmation.ejs');
+      const ejsData = {
+        username: user.username,
+        token: confirmationToken,
+        baseUrl: environment.baseUrl,
+      };
+
       const confirmationEmail: Email = {
-        html: await getWelcomeEmail(`${user.email}`, confirmationToken),
+        html: await getEmailTemplate(pathToTemplate, ejsData),
         subject: 'Tech Talent Account Confirmation',
         to: [{ email: user.email, type: 'to' }],
       };
@@ -86,6 +93,11 @@ export class AuthController {
   async verifyUserAccount(req: Request, res: Response) {
     try {
       const userId = req?.currentUser?.id;
+      if (req?.currentUser?.verified) {
+        return res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json({ message: 'User account already verified' });
+      }
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
       await userModel.findByIdAndUpdate(userId, { verified: true });
 
@@ -125,6 +137,61 @@ export class AuthController {
     } catch (error) {
       logger.error(error.message);
       return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
+    }
+  }
+  async forgetPassword(req: Request, res: Response) {
+    const { email } = req.body;
+    try {
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      const user = await userModel.findOne({ email });
+
+      if (!user) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'Email not found' });
+      }
+
+      const resetPasswordToken = generateJWTToken({ userId: user._id }, 60 * 60 * 4); // (60 * 60 * 4) for 4 hours
+      const ejsData = {
+        username: user.username,
+        token: resetPasswordToken,
+        baseUrl: environment.baseUrl,
+      };
+      const pathToTemplate = path.join(__dirname, '../../', 'templates/password-reset.ejs');
+      const resetPasswordEmail: Email = {
+        html: await getEmailTemplate(pathToTemplate, ejsData),
+        subject: 'Tech Talent Account Reset Password',
+        to: [{ email: user.email, type: 'to' }],
+      };
+
+      sendEmail(resetPasswordEmail);
+
+      return res.status(STATUS_CODES.OK).json({
+        message: 'Please check your email for password reset instructions',
+      });
+    } catch (error) {
+      logger.error(error.message);
+      return res.status(STATUS_CODES.SERVER_ERROR).json({
+        error: 'Could not send instructions to reset password due to an internal server error',
+      });
+    }
+  }
+  async resetPassword(req: Request, res: Response) {
+    const { password } = req.body;
+    try {
+      const userId = req?.currentUser?.id;
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      const user = await userModel.findById(userId);
+      if (user) {
+        user.password = password;
+        await user.save();
+      }
+      return res.status(STATUS_CODES.OK).json({
+        message: 'Password reset successful, you can now login',
+      });
+    } catch (error) {
+      logger.error(error.message);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ error: 'Could not reset your password due to an internal server' });
     }
   }
 }

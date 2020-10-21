@@ -36,6 +36,17 @@ export function passwordValidator() {
   ];
 }
 
+export function confirmPasswordValidator() {
+  return [
+    body('confirm-password').custom(async (confirmPassword, { req }) => {
+      const { password } = req.body;
+      if (password !== confirmPassword) {
+        throw new Error('Password does not match');
+      }
+    }),
+  ];
+}
+
 export function usernameValidator() {
   const userModel = ModelFactory.getModel(MODELS.USER);
   return [
@@ -86,5 +97,5 @@ function roleValidator() {
 }
 
 export function registrationRules() {
-  return [...emailValidator(), ...usernameValidator(), ...passwordValidator(), ...roleValidator()];
+  return [...emailValidator(), ...usernameValidator(), ...passwordValidator()];
 }

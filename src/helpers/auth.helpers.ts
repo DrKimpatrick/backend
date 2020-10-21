@@ -13,7 +13,7 @@ export const generateVerificationToken = (userId: string) => {
   );
 };
 
-export const generateAccessToken = (userId: string, roles: USER_ROLES[], expiry = '20m') => {
+export const generateAccessToken = (userId: string, roles?: USER_ROLES[], expiry = '20m') => {
   return jsonwebtoken.sign(
     {
       roles,

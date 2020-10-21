@@ -7,6 +7,7 @@ import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
 import { generateVerificationToken } from '../../helpers/auth.helpers';
+import { generateJWTToken } from '../../helpers';
 
 describe('Auth /auth', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -22,6 +23,7 @@ describe('Auth /auth', () => {
       supertest(app)
         .post('/api/v1/auth/login')
         .set('Accept', 'application/json')
+        .send({})
         .expect('Content-Type', /json/)
         .end((req, res) => {
           expect(res.status).toBe(401);
@@ -271,6 +273,7 @@ describe('Auth /auth', () => {
   });
 
   describe('GET /account-verify', () => {
+    let removedUserToken: string;
     it('should verify user account', async (done) => {
       let testUser = await userM.create({
         email: 'testverify@test.com',
@@ -278,11 +281,11 @@ describe('Auth /auth', () => {
         password: '#ThePassIs@strong',
       });
       const verificationToken = generateVerificationToken(testUser.id);
-      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+      removedUserToken = verificationToken;
 
       supertest(app)
-        .get(verificationUrl)
-        .set('Accept', 'application/json')
+        .post('/api/v1/auth/verify-account')
+        .send({ token: verificationToken })
         .end(async (err, res) => {
           testUser = await userM.findById(testUser.id);
 
@@ -292,21 +295,33 @@ describe('Auth /auth', () => {
         });
     });
 
-    it('should not verify user account without a token', async (done) => {
+    it('should not verify user again if already verified account', async (done) => {
       let testUser = await userM.create({
         email: 'testverify@test.com',
         username: 'verifytester',
         password: '#ThePassIs@strong',
       });
-      const verificationToken = '';
-      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+      const verificationToken = generateVerificationToken(testUser.id);
+      removedUserToken = verificationToken;
+      await userM.findByIdAndUpdate({ _id: testUser.id }, { verified: true });
 
       supertest(app)
-        .get(verificationUrl)
-        .set('Accept', 'application/json')
+        .post('/api/v1/auth/verify-account')
+        .send({ token: verificationToken })
         .end(async (err, res) => {
           testUser = await userM.findById(testUser.id);
 
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+
+    it('should not verify user account without a token', (done) => {
+      supertest(app)
+        .post('/api/v1/auth/verify-account')
+        .send()
+        .end(async (err, res) => {
           expect(res.status).toBe(401);
           expect(res.body).toHaveProperty('error');
           done();
@@ -314,22 +329,140 @@ describe('Auth /auth', () => {
     });
 
     it('should not verify user account with and invalid token', async (done) => {
-      let testUser = await userM.create({
-        email: 'testverify@test.com',
-        username: 'verifytester',
-        password: '#ThePassIs@strong',
-      });
       const verificationToken = 'invalid.obviously';
-      const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
+      // const verificationUrl = `/api/v1/auth/verify-account?token=${verificationToken}`;
 
       supertest(app)
-        .get(verificationUrl)
-        .set('Accept', 'application/json')
+        .post('/api/v1/auth/verify-account')
+        .send({ token: verificationToken })
         .end(async (err, res) => {
-          testUser = await userM.findById(testUser.id);
-
           expect(res.status).toBe(401);
           expect(res.body).toHaveProperty('error');
+          done();
+        });
+    });
+
+    it('should not verify user account if user not found', (done) => {
+      supertest(app)
+        .post('/api/v1/auth/verify-account')
+        .send({ token: removedUserToken })
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.NOT_FOUND);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+  });
+
+  describe('POST /forget-password', () => {
+    let testUser = {
+      email: 'resetpassword@test.com',
+      username: 'resetpasswordtester',
+      password: '#ThePassIs@strong',
+    };
+
+    it('should sent email for resetting password instructions', async (done) => {
+      await userM.create(testUser);
+
+      supertest(app)
+        .post('/api/v1/auth/forget-password')
+        .send({ email: testUser.email })
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+
+    it('should not sent email for resetting password instructions with user not found', async (done) => {
+      supertest(app)
+        .post('/api/v1/auth/forget-password')
+        .send({ email: testUser.email })
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.NOT_FOUND);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+  });
+
+  describe('POST /reset-password', () => {
+    let testUser = {
+      email: 'resetpassword@test.com',
+      username: 'resetpasswordtester',
+      password: '#ThePassIs1@strong',
+    };
+
+    it('should reset password', async (done) => {
+      const user = await userM.create(testUser);
+      const resetPasswordToken = generateJWTToken({ userId: user._id }, 14400);
+      const resetPasswordBody = {
+        token: resetPasswordToken,
+        password: 'ResetPassword1@strong',
+        'confirm-password': 'ResetPassword1@strong',
+      };
+      supertest(app)
+        .post('/api/v1/auth/reset-password')
+        .send(resetPasswordBody)
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+
+    it('should not reset password with expired token', async (done) => {
+      const user = await userM.create(testUser);
+      const resetPasswordToken = generateJWTToken({ userId: user._id }, -1);
+      const resetPasswordBody = {
+        token: resetPasswordToken,
+        password: 'ResetPassword1@strong',
+        'confirm-password': 'ResetPassword1@strong',
+      };
+      supertest(app)
+        .post('/api/v1/auth/reset-password')
+        .send(resetPasswordBody)
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.UNAUTHORIZED);
+          expect(res.body.error).toBe('Token is invalid or expired');
+          done();
+        });
+    });
+
+    it('should not reset password with password not match', async (done) => {
+      const user = await userM.create(testUser);
+      const resetPasswordToken = generateJWTToken({ userId: user._id }, 14400);
+      const resetPasswordBody = {
+        token: resetPasswordToken,
+        password: 'ResetPassword1@strong',
+        'confirm-password': 'passwordNotMatch1@strong',
+      };
+      supertest(app)
+        .post('/api/v1/auth/reset-password')
+        .send(resetPasswordBody)
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect.arrayContaining([
+            expect.objectContaining({ 'confirm-password': expect.any(String) }),
+          ]);
+          done();
+        });
+    });
+
+    it('should not reset password with password not strong', async (done) => {
+      const user = await userM.create(testUser);
+      const resetPasswordToken = generateJWTToken({ userId: user._id }, 14400);
+      const resetPasswordBody = {
+        token: resetPasswordToken,
+        password: 'notstrong',
+        'confirm-password': 'notstrong',
+      };
+      supertest(app)
+        .post('/api/v1/auth/reset-password')
+        .send(resetPasswordBody)
+        .end(async (err, res) => {
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect.arrayContaining([expect.objectContaining({ password: expect.any(String) })]);
           done();
         });
     });

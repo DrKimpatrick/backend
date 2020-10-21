@@ -7,13 +7,13 @@ import IUser from '../models/interfaces/user.interface';
 import { BaseTokenPayload } from '../interfaces';
 import { logger } from '../shared/winston';
 
-export const requireToken = (isTokenInQueryParams = false) => async (
+export const requireToken = (isTokenInBodyParams = false) => async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const token = isTokenInQueryParams
-    ? (req.query.token as string)
+  const token = isTokenInBodyParams
+    ? (req.body.token as string)
     : req.headers.authorization?.split(' ')[1];
 
   if (!token) return res.status(STATUS_CODES.UNAUTHORIZED).json({ error: 'Missing token' });
@@ -22,13 +22,7 @@ export const requireToken = (isTokenInQueryParams = false) => async (
     const payload = jsonwebtoken.verify(token, environment.secretKey) as BaseTokenPayload;
     const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
     const user = await userModel.findById(payload.userId);
-
     if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
-    if (isTokenInQueryParams && user.verified) {
-      return res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json({ message: 'User account already verified' });
-    }
 
     req.currentUser = user;
     return next();
@@ -46,17 +40,17 @@ export const requireRoles = (roles: USER_ROLES[]) => (
   if (!req.currentUser) {
     return res
       .status(STATUS_CODES.UNAUTHORIZED)
-      .json({ message: 'You are unauthorized to perform this aciton' });
+      .json({ message: 'You are unauthorized to perform this action' });
   }
 
   let authorized = false;
 
   roles.forEach((role) => {
-    authorized = req.currentUser?.roles.includes(role) as boolean;
+    authorized = req.currentUser?.roles?.includes(role) as boolean;
   });
 
   // super_admin have access to all endpoints
-  if (authorized || req.currentUser?.roles.includes(USER_ROLES.SUPER_ADMIN)) {
+  if (authorized || req.currentUser?.roles?.includes(USER_ROLES.SUPER_ADMIN)) {
     return next();
   }
 

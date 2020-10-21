@@ -3,7 +3,12 @@ import authController from './auth.controller';
 import passport, { AuthenticateOptions } from 'passport';
 import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
-import { validate, registrationRules } from '../../helpers/request-validation.helpers';
+import {
+  validate,
+  registrationRules,
+  passwordValidator,
+  confirmPasswordValidator,
+} from '../../helpers/request-validation.helpers';
 import { requireToken } from '../../middleware/auth.middleware';
 
 const authRouter = Router();
@@ -83,6 +88,18 @@ const authRouter = Router();
  *     properties:
  *       message:
  *         type: string
+ *   ResponseResetPassword:
+ *     type: object
+ *     properties:
+ *       message:
+ *         type: string
+ *         description: Successful message
+ *   Error404:
+ *     type: object
+ *     properties:
+ *       message:
+ *         type: string
+ *         description: Error message
  */
 
 /**
@@ -230,14 +247,14 @@ authRouter.post('/register', validate(registrationRules()), authController.regis
 /**
  * @swagger
  * /api/v1/auth/verify-account:
- *   get:
+ *   post:
  *     summary: Verify account
  *     tags: [Auth]
  *     description: Verify user account
  *     parameters:
  *       - name: token
  *         description: account verification token
- *         in: query
+ *         in: body
  *         required: true
  *         type: string
  *     responses:
@@ -256,7 +273,7 @@ authRouter.post('/register', validate(registrationRules()), authController.regis
  *              schema:
  *                $ref: '#definitions/Error'
  */
-authRouter.get('/verify-account', requireToken(true), authController.verifyUserAccount);
+authRouter.post('/verify-account', requireToken(true), authController.verifyUserAccount);
 
 /**
  * @swagger
@@ -287,5 +304,96 @@ authRouter.get('/verify-account', requireToken(true), authController.verifyUserA
  *                $ref: '#definitions/RefreshFailureResponse'
  */
 authRouter.get('/refresh', authController.refreshToken);
+
+/**
+ * @swagger
+ * /api/v1/auth/forget-password:
+ *   post:
+ *     summary: Forget password
+ *     tags: [Auth]
+ *     description: User requests for password reset once he/she has forgotten it
+ *     parameters:
+ *       - name: email
+ *         description: user email
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful sent a link to reset password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/ResponseResetPassword'
+ *       404:
+ *          description: Email Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error404'
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#definitions/Error'
+ */
+authRouter.post('/forget-password', authController.forgetPassword);
+
+/**
+ * @swagger
+ * /api/v1/auth/reset-password:
+ *   post:
+ *     summary: reset password
+ *     tags: [Auth]
+ *     description: User requests for password reset
+ *     parameters:
+ *       - name: token
+ *         description: token sent to the user email account
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: password
+ *         description: new password
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: confirm-password
+ *         description: confirm password
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful reset passed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/ResponseResetPassword'
+ *       401:
+ *          description: Invalid or expired token
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       404:
+ *          description: User not found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error404'
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#definitions/Error'
+ */
+authRouter.post(
+  '/reset-password',
+  requireToken(true),
+  validate([...passwordValidator(), ...confirmPasswordValidator()]),
+  authController.resetPassword
+);
 
 export { authRouter };

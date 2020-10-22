@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { HookNextFunction } from 'mongoose';
+import { USER_ROLES } from '../constants';
 
 export async function saveUser(next: HookNextFunction) {
   const SALT_WORK_FACTOR = 10;
@@ -18,6 +19,11 @@ export async function saveUser(next: HookNextFunction) {
 export function getUserFullName() {
   // @ts-ignore
   return `${this.firstName} ${this.lastName}`;
+}
+
+export function isSuperAdmin() {
+  // @ts-ignore
+  return this.roles.includes(USER_ROLES.SUPER_ADMIN);
 }
 
 export function validatePassword(password: string) {

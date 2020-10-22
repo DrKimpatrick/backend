@@ -1,8 +1,8 @@
 import jsonwebtoken from 'jsonwebtoken';
-import express_jwt from 'express-jwt';
 import { Request } from 'express';
 import { environment } from '../config/environment';
 import { USER_ROLES } from '../constants';
+import { DecodeTokenType } from '../interfaces';
 
 export const generateVerificationToken = (userId: string) => {
   return jsonwebtoken.sign(
@@ -35,28 +35,25 @@ export const generateRefreshToken = (userId: string, passwordHash: string, expir
   );
 };
 
-const getTokenFromHeaders = (req: Request) => {
-  const {
+export const decodeJWT = (token: string): DecodeTokenType | null => {
+  return jsonwebtoken.verify(token, environment.secretKey, { complete: true }) as DecodeTokenType;
+};
+
+export const getTokenFromRequest = (req: Request, inBody = false) => {
+  let {
     headers: { authorization },
   } = req;
+
+  if (inBody) {
+    authorization = req.body.token as string;
+  }
+
+  if (inBody && authorization) {
+    return authorization;
+  }
+
   if (authorization && authorization.split(' ')[0].toLowerCase() === 'bearer') {
     return authorization.split(' ')[1];
   }
   return null;
-};
-
-export const auth = {
-  required: express_jwt({
-    secret: environment.secretKey,
-    userProperty: 'payload',
-    algorithms: ['HS256'],
-    getToken: getTokenFromHeaders,
-  }),
-  optional: express_jwt({
-    secret: environment.secretKey,
-    userProperty: 'payload',
-    algorithms: ['HS256'],
-    getToken: getTokenFromHeaders,
-    credentialsRequired: false,
-  }),
 };

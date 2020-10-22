@@ -1,30 +1,42 @@
 import { NextFunction, Request, Response } from 'express';
-import jsonwebtoken from 'jsonwebtoken';
 import { MODELS, STATUS_CODES, USER_ROLES } from '../constants';
 import { environment } from '../config/environment';
 import { ModelFactory } from '../models/model.factory';
 import IUser from '../models/interfaces/user.interface';
-import { BaseTokenPayload } from '../interfaces';
 import { logger } from '../shared/winston';
+import { decodeJWT, getTokenFromRequest } from '../helpers/auth.helpers';
 
 export const requireToken = (isTokenInBodyParams = false) => async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const token = isTokenInBodyParams
-    ? (req.body.token as string)
-    : req.headers.authorization?.split(' ')[1];
+  const doNotRequireTokenUrls = new RegExp(
+    `^((${environment.apiPrefix}/auth.*)|(${environment.apiPrefix}/users/beta-testers))$`,
+    'i'
+  );
 
-  if (!token) return res.status(STATUS_CODES.UNAUTHORIZED).json({ error: 'Missing token' });
+  if (doNotRequireTokenUrls.test(req.url)) {
+    // if url is not required to have a token and the token is indeed not provided, just proceed
+    // to next handler, unless if a token is provided even when it is not required
+    return next();
+  }
 
   try {
-    const payload = jsonwebtoken.verify(token, environment.secretKey) as BaseTokenPayload;
+    const token = getTokenFromRequest(req, isTokenInBodyParams);
+    if (!token) return res.status(STATUS_CODES.UNAUTHORIZED).json({ error: 'Missing token' });
+
+    const data = decodeJWT(token);
+    if (!data) return res.status(STATUS_CODES.UNAUTHORIZED).json({ error: 'Invalid token' });
+
+    const { payload } = data;
+
     const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
     const user = await userModel.findById(payload.userId);
     if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
 
     req.currentUser = user;
+    req.currentUser.isSuperAdmin = user.isSuperAdmin;
     return next();
   } catch (error) {
     logger.error(error.message);

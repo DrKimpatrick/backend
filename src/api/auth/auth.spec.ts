@@ -18,6 +18,11 @@ describe('Auth /auth', () => {
     await socialM.deleteMany({});
   });
 
+  afterEach(async () => {
+    await userM.deleteMany({});
+    await socialM.deleteMany({});
+  });
+
   describe('POST /login', () => {
     it('responds with error missing credentials', (done: any) => {
       supertest(app)

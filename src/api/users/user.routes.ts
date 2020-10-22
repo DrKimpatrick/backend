@@ -2,6 +2,8 @@ import { Router } from 'express';
 import userController from './user.controller';
 import { userProfileRules } from '../../helpers/user-profile-validation.helper';
 import { newBetaTesterRules, validate } from '../../helpers/request-validation.helpers';
+import { requireRoles } from '../../middleware/auth.middleware';
+import { USER_ROLES } from '../../constants';
 
 const userRouter = Router();
 /**
@@ -145,7 +147,7 @@ const userRouter = Router();
  *     parameters:
  *       - name: id
  *         in: path
- *         type: integer
+ *         type: string
  *         required: true
  *       - in: body
  *         name: profile
@@ -158,7 +160,10 @@ const userRouter = Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/definitions/UserProfile'
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   $ref: '#/definitions/UserProfile'
  *       400:
  *          description: BadRequest
  *          content:
@@ -179,6 +184,80 @@ const userRouter = Router();
  *                $ref: '#definitions/ValidationError'
  */
 userRouter.patch('/:id', validate(userProfileRules()), userController.profileEdit);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}:
+ *   get:
+ *     summary: Edit User profile
+ *     tags: [Users]
+ *     description: Fetch User Profile
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         required: true
+ *
+ *     responses:
+ *       200:
+ *         description: Profile haas been edited
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   $ref: '#/definitions/UserProfile'
+ *
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/:id', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.getUser);
+
+/**
+ * @swagger
+ * /api/v1/users/:
+ *   get:
+ *     summary: Retrieve all Users profile
+ *     tags: [Users]
+ *     description: Fetch All Users
+ *
+ *     responses:
+ *       200:
+ *         description: Profile haas been edited
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserProfile'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.listUsers);
 
 /**
  * @swagger

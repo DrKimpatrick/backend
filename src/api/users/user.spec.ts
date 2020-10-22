@@ -2,7 +2,7 @@ import supertest from 'supertest';
 import faker from 'faker';
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
-import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
+import { MODELS, SIGNUP_MODE, STATUS_CODES, USER_ROLES } from '../../constants';
 import {
   correctUserProfileData,
   updateWrongEducationProfileData,
@@ -100,10 +100,73 @@ describe('User /users', () => {
         .set('Authorization', `Bearer ${token}`)
         .send(correctUserProfileData)
         .end((err, res) => {
-          expect(res.status).toBe(200);
+          expect(res.status).toBe(STATUS_CODES.OK);
           expect(res.body).toHaveProperty('profile');
           expect(res.body.profile).toHaveProperty('email');
-          expect(res.body.profile.email).toEqual(correctUserProfileData.email);
+          expect(res.body.profile).toHaveProperty('firstName');
+          // email should not be updated
+          expect(res.body.profile.email).toEqual('test@email.com');
+          expect(res.body.profile.firstName).toEqual('John');
+          done();
+        });
+    });
+  });
+
+  describe('GET /users', () => {
+    it('/users, should return 401 if not super admin', (done) => {
+      supertest(app)
+        .get(`/api/v1/users/`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.FORBIDDEN);
+          expect(res.body).toHaveProperty('message');
+          expect(res.body.message).toBe(
+            'You do not have the permissions to perform this operation'
+          );
+          done();
+        });
+    });
+
+    it('/users, should return a list of all users', async (done) => {
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.SUPER_ADMIN] },
+        },
+        { new: true }
+      );
+
+      supertest(app)
+        .get(`/api/v1/users/`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('data');
+          expect(Array.isArray(res.body.data)).toBeTruthy();
+          expect(res.body.data.length).toBe(1);
+          done();
+        });
+    });
+
+    it('/users/:id, should return a single user', async (done) => {
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.SUPER_ADMIN] },
+        },
+        { new: true }
+      );
+
+      supertest(app)
+        .get(`/api/v1/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('profile');
+          expect(Array.isArray(res.body.data)).toBeFalsy();
+          expect(res.body.profile).toHaveProperty('_id');
           done();
         });
     });

@@ -16,6 +16,7 @@ const environment = {
   socialAuthRedirectURL: process.env.SOCIAL_AUTH_REDIRECT_URL || '',
   mailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
   baseUrl: process.env.BASE_URL || '',
+  apiPrefix: process.env.API_PREFIX || '/api/v1',
 };
 
 if (environment.env === 'test') {

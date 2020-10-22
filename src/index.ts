@@ -8,7 +8,8 @@ import { v1Router } from './api/router';
 import swaggerConfig from './config/swagger';
 import passport from 'passport';
 import cache from './shared/cache';
-import { auth } from './helpers/auth.helpers';
+import { environment } from './config/environment';
+import { requireToken } from './middleware/auth.middleware';
 
 dotenv.config();
 
@@ -23,32 +24,21 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-const prefix = '/api/v1';
-
 app.use(
-  `${prefix}/docs`,
+  `${environment.apiPrefix}/docs`,
   swaggerUiExpress.serve,
   swaggerUiExpress.setup(swaggerConfig, { explorer: true })
 );
 
-const noAuthPaths = [
-  new RegExp(`${prefix}/auth*`, 'i'),
-  new RegExp(`${prefix}/users/beta-testers`, 'i'),
-];
-
-app.all(
-  '*',
-  auth.required.unless({ path: noAuthPaths }),
-  (err: any, req: any, res: any, next: NextFunction) => {
-    if (err.name === 'UnauthorizedError') {
-      res.status(err.status).send({ message: err.message });
-      return;
-    }
-    next();
+app.all('*', requireToken(), (err: any, req: any, res: any, next: NextFunction) => {
+  if (err.name === 'UnauthorizedError') {
+    res.status(err.status).send({ message: err.message });
+    return;
   }
-);
+  next();
+});
 
-app.use(prefix, v1Router);
+app.use(environment.apiPrefix, v1Router);
 
 app.get('*', (req, res) => {
   res.status(404).json({ message: 'Not found' });

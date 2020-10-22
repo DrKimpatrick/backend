@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
-import { getUserFullName, saveUser, toAuthJSON, validatePassword } from '../helpers/model.helpers';
-import { FEATURE_CHOICE, PAYMENT_STATUS, SIGNUP_MODE } from '../constants';
+import {
+  getUserFullName,
+  isSuperAdmin,
+  saveUser,
+  toAuthJSON,
+  validatePassword,
+} from '../helpers/model.helpers';
+import { FEATURE_CHOICE, PAYMENT_STATUS, SIGNUP_MODE, USER_ROLES } from '../constants';
 import IUser from './interfaces/user.interface';
 import { generateAccessToken, generateRefreshToken } from '../helpers/auth.helpers';
 
@@ -12,6 +18,7 @@ const userSchema = new Schema(
     signupMode: {
       type: SIGNUP_MODE,
       default: SIGNUP_MODE.LOCAL,
+      enum: Object.values(SIGNUP_MODE),
     },
     firstName: {
       type: String,
@@ -47,17 +54,8 @@ const userSchema = new Schema(
     },
     roles: {
       type: [String],
-      enum: [
-        'talent',
-        'education',
-        'super_admin',
-        'recruitment_admin',
-        'hr_admin',
-        'company_admin',
-        'training_admin',
-        'training_affiliate',
-      ],
-      required: [true, 'A valid user role is required'],
+      default: ['talent'],
+      enum: Object.values(USER_ROLES),
     },
     verified: {
       type: Boolean,
@@ -66,10 +64,12 @@ const userSchema = new Schema(
     featureChoice: {
       type: FEATURE_CHOICE,
       default: FEATURE_CHOICE.FREE,
+      enum: Object.values(FEATURE_CHOICE),
     },
     paymentStatus: {
       type: PAYMENT_STATUS,
       default: PAYMENT_STATUS.UNPAID,
+      enum: Object.values(PAYMENT_STATUS),
     },
     skills: [
       {
@@ -100,6 +100,7 @@ const userSchema = new Schema(
 );
 
 userSchema.virtual('name').get(getUserFullName);
+userSchema.virtual('isSuperAdmin').get(isSuperAdmin);
 
 userSchema.pre('save', saveUser);
 

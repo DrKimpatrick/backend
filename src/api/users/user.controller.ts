@@ -28,6 +28,29 @@ export class UserController {
     }
   }
 
+  listUsers = async (req: Request, res: Response) => {
+    try {
+      const userModel = ModelFactory.getModel(MODELS.USER);
+      const users = await userModel.find().exec();
+      return res.json({ data: users });
+    } catch (e) {
+      logger.info(e);
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+    }
+  };
+
+  getUser = async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.id;
+      const userModel = ModelFactory.getModel(MODELS.USER);
+      const user = await userModel.findById(userId).exec();
+      return res.json({ profile: user });
+    } catch (e) {
+      logger.info(e);
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
+    }
+  };
+
   profileEdit = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;
@@ -68,14 +91,18 @@ export class UserController {
         educationHistory = eduH.data;
       }
 
+      delete req.body?.employmentHistory;
+      delete req.body?.educationHistory;
+      // should not update email
+      delete req.body?.email;
+
       const userModel = ModelFactory.getModel(MODELS.USER);
       const user = await userModel
         .findByIdAndUpdate(
           userId,
           {
             ...req.body,
-            employmentHistory,
-            educationHistory,
+            $set: { employmentHistory, educationHistory },
           },
           { new: true }
         )
@@ -86,6 +113,7 @@ export class UserController {
 
       return res.json({ profile: user });
     } catch (e) {
+      logger.info(e);
       return res.status(STATUS_CODES.NOT_FOUND).json({ message: `Error: ${e.message}` });
     }
   };
@@ -102,7 +130,7 @@ export class UserController {
 
     // Find all existing docs and verify they exist
     const mergeExisting = [...updateDocs, ...deleteDocs];
-    const ids = mergeExisting.map((x: any) => x.id || x._id);
+    const ids = mergeExisting.map((x: any) => (x.id || x._id).toString());
     let found = await model.find().where('_id').in(ids).select('_id').exec();
     found = found.map((x) => x._id.toString());
     // filter those that were not found in the DB
@@ -113,7 +141,7 @@ export class UserController {
 
     // DO update the existing ones
     for (const doc of updateDocs) {
-      const id = doc.id || doc._id;
+      const id = (doc.id || doc._id).toString();
       delete doc.id;
       delete doc._id;
       delete doc.action;
@@ -121,7 +149,7 @@ export class UserController {
     }
     // DO Delete the existing ones
     if (deleteDocs.length > 0) {
-      const ids1 = deleteDocs.map((x: any) => x.id || x._id);
+      const ids1 = deleteDocs.map((x: any) => (x.id || x._id).toString());
       await model.deleteMany({ _id: { $in: ids1 } }).exec();
     }
     // also crete the new ones
@@ -133,7 +161,7 @@ export class UserController {
       newDocs = await model.create(newDocs);
     }
 
-    return { error: null, data: [...updateDocs, ...newDocs].map((c) => c._id) };
+    return { error: null, data: [...updateDocs, ...newDocs].map((c) => c._id.toString()) };
   };
 }
 

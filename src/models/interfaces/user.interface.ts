@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { SIGNUP_MODE, USER_ROLES } from '../../constants';
+import { FEATURE_CHOICE, PAYMENT_STATUS, SIGNUP_MODE, USER_ROLES } from '../../constants';
 
 export default interface IUser extends Document {
   id: string;
@@ -12,4 +12,12 @@ export default interface IUser extends Document {
   password: string;
   roles?: USER_ROLES[];
   verified?: boolean;
+  featureChoice?: FEATURE_CHOICE;
+  paymentStatus?: PAYMENT_STATUS;
+  skills?: string[];
+  employmentHistory?: string[];
+  educationHistory?: string[];
+  // virtual properties
+  name?: string;
+  isSuperAdmin?: boolean;
 }

@@ -170,6 +170,32 @@ describe('User /users', () => {
           done();
         });
     });
+
+    it('/users/:id/employment, should return user employment', async (done) => {
+      await skillModel.create({
+        _id: correctUserProfileData.skills[0],
+        skill: 'Django',
+      });
+
+      supertest(app)
+        .patch(`/api/v1/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(correctUserProfileData)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+
+          supertest(app)
+            .get(`/api/v1/users/${user.id}/employment`)
+            .set('Authorization', `Bearer ${token}`)
+            .end((err, res) => {
+              expect(res.status).toBe(STATUS_CODES.OK);
+              expect(res.body).toHaveProperty('data');
+              expect(Array.isArray(res.body.data)).toBeTruthy();
+              expect(res.body.data.length).toBeGreaterThan(0);
+              done();
+            });
+        });
+    });
   });
 
   describe('POST /users/beta-testers', () => {

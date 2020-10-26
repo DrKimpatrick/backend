@@ -95,7 +95,7 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
       }
       socialUser = await socialModal
         .findByIdAndUpdate(socialUser.id, { user: user.id }, { new: true })
-        .populate('user', '+refreshToken -__v')
+        .populate('user')
         .exec();
       if (socialUser.user) {
         socialUser = socialUser.user;
@@ -103,6 +103,7 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
     }
     return next(null, socialUser);
   } catch (err) {
+    logger.error(err);
     return next(err.message || err, null, {
       message: 'Unable to Complete Registration',
     });

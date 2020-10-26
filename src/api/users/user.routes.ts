@@ -294,6 +294,39 @@ userRouter.post('/beta-testers', validate(newBetaTesterRules()), userController.
 
 /**
  * @swagger
+ * /api/v1/users/{id}/education:
+ *   get:
+ *     summary: Fetch User Education History
+ *     tags: [Users]
+ *     description: Fetch User Education History
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         required: true
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/EducationHistory'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/:id/education', userController.educationHistory);
+
+/**
+ * @swagger
  * /api/v1/users/{id}/employment:
  *   get:
  *     summary: Fetch User Employment History

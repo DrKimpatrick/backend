@@ -10,11 +10,7 @@ import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/mailchimp';
 import { getEmailTemplate } from '../../shared/email.templates';
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  generateVerificationToken,
-} from '../../helpers/auth.helpers';
+import { generateAccessToken, generateVerificationToken } from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
 import { BaseTokenPayload } from '../../interfaces';
 import { generateJWTToken } from '../../helpers/';
@@ -46,9 +42,13 @@ export class AuthController {
     const data = buff.toString('base64');
 
     const endpoint = url.format({
-      pathname: cache.get('SOCIAL_AUTH_REDIRECT_URL') || environment.socialAuthRedirectURL,
+      // pathname: cache.get('SOCIAL_AUTH_REDIRECT_URL') || environment.socialAuthRedirectURL,
+      pathname: environment.socialAuthRedirectURL,
       query: { data },
     });
+
+    logger.info(`Social Auth Redirecting user to: ${endpoint}`);
+
     cache.remove('SOCIAL_AUTH_REDIRECT_URL');
     res.redirect(endpoint);
   }

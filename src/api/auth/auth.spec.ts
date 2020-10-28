@@ -100,7 +100,9 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain('https://test_url.com/?data=');
+              expect(res.header.location).toContain(
+                'http://localhost:3000/dashboard/auth/verify?data='
+              );
               done();
             });
         });
@@ -124,7 +126,9 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain('https://test_url.com/?data=');
+              expect(res.header.location).toContain(
+                'http://localhost:3000/dashboard/auth/verify?data='
+              );
               done();
             });
         });
@@ -148,7 +152,9 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain('https://test_url.com/?data=');
+              expect(res.header.location).toContain(
+                'http://localhost:3000/dashboard/auth/verify?data='
+              );
               done();
             });
         });

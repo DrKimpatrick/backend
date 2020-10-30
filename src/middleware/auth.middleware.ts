@@ -44,7 +44,7 @@ export const requireToken = (isTokenInBodyParams = false) => async (
   }
 };
 
-export const requireRoles = (roles: USER_ROLES[]) => (
+export const requireRoles = (roles: USER_ROLES[], checkAll = true) => (
   req: Request,
   res: Response,
   next: NextFunction
@@ -55,11 +55,12 @@ export const requireRoles = (roles: USER_ROLES[]) => (
       .json({ message: 'You are unauthorized to perform this action' });
   }
 
-  let authorized = false;
-
-  roles.forEach((role) => {
-    authorized = req.currentUser?.roles?.includes(role) as boolean;
-  });
+  let authorized;
+  if (checkAll) {
+    authorized = roles.every((role) => req.currentUser?.roles?.includes(role) as boolean);
+  } else {
+    authorized = roles.some((role) => req.currentUser?.roles?.includes(role) as boolean);
+  }
 
   // super_admin have access to all endpoints
   if (authorized || req.currentUser?.roles?.includes(USER_ROLES.SUPER_ADMIN)) {

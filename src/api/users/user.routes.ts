@@ -6,6 +6,7 @@ import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 
 const userRouter = Router();
+
 /**
  * @swagger
  * definition:
@@ -32,7 +33,12 @@ const userRouter = Router();
  *               type: string
  *             location:
  *               type: string
- *
+ *   Error404:
+ *     type: object
+ *     properties:
+ *       message:
+ *         type: string
+ *         description: Error message
  *   EducationHistory:
  *     type: object
  *     required:
@@ -136,6 +142,59 @@ const userRouter = Router();
  *       message:
  *         type: string
  */
+
+/**
+ * @swagger
+ * /api/v1/users/talent?skills=id,id or ?subscription=premium|standard|basic:
+ *   get:
+ *     summary: Retrieve talents based on skills or subscription
+ *     tags: [Users]
+ *     description: Fetch talents Users based on skills
+ *     responses:
+ *       200:
+ *         description: talents profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserProfile'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       403:
+ *          description: Forbidden
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error404'
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error404'
+ */
+userRouter.get(
+  '/talent',
+  requireRoles(
+    [USER_ROLES.RECRUITMENT_ADMIN, USER_ROLES.HR_ADMIN, USER_ROLES.COMPANY_ADMIN],
+    false
+  ),
+  userController.getTalents
+);
 
 /**
  * @swagger

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
-import { DOCUMENT_ACTION, MODELS, STATUS_CODES } from '../../constants';
+import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
 
@@ -201,6 +201,33 @@ export class UserController {
     }
 
     return { error: null, data: [...updateDocs, ...newDocs].map((c) => c._id.toString()) };
+  };
+
+  getTalents = async (req: Request, res: Response) => {
+    const skills = req.query.skills as string;
+    const { subscription } = req.query;
+    try {
+      const userModel = ModelFactory.getModel(MODELS.USER);
+      let talents = [];
+      if (skills) {
+        const skillIds = skills.split(',');
+        talents = await userModel
+          .find({ skills: { $in: skillIds }, roles: [USER_ROLES.TALENT] })
+          .exec();
+      }
+      if (subscription) {
+        talents = await userModel
+          .find({ featureChoice: subscription, roles: [USER_ROLES.TALENT] })
+          .exec();
+      }
+      if (talents.length === 0) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'No users found' });
+      }
+      return res.json({ data: talents });
+    } catch (error) {
+      logger.info(error);
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
+    }
   };
 }
 

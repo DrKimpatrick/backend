@@ -35,7 +35,8 @@ export enum PAYMENT_STATUS {
 
 export enum FEATURE_CHOICE {
   PREMIUM = 'premium',
-  FREE = 'free',
+  BASIC = 'basic',
+  STANDARD = 'standard',
 }
 
 export const MODELS = {

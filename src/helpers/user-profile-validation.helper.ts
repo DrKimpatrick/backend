@@ -16,7 +16,7 @@ export function userProfileRules() {
     body('role', 'Role must have a value').optional().notEmpty({ ignore_whitespace: true }),
     body('featureChoice', 'This field must have a value')
       .optional()
-      .isIn([FEATURE_CHOICE.FREE, FEATURE_CHOICE.PREMIUM]),
+      .isIn([FEATURE_CHOICE.BASIC, FEATURE_CHOICE.STANDARD, FEATURE_CHOICE.PREMIUM]),
     body('paymentStatus', 'This field must have a value')
       .optional()
       .isIn([PAYMENT_STATUS.CONFIRMED, PAYMENT_STATUS.FAILED, PAYMENT_STATUS.UNPAID]),

@@ -63,7 +63,7 @@ const userSchema = new Schema(
     },
     featureChoice: {
       type: FEATURE_CHOICE,
-      default: FEATURE_CHOICE.FREE,
+      default: FEATURE_CHOICE.BASIC,
       enum: Object.values(FEATURE_CHOICE),
     },
     paymentStatus: {

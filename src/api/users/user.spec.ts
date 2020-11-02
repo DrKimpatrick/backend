@@ -293,4 +293,90 @@ describe('User /users', () => {
         });
     });
   });
+  describe('GET /users/talent?skills=id,id', () => {
+    it('should successfully search talent based on skills', async (done) => {
+      const skill = await skillModel.create({ skill: 'Javascript' });
+      const newUser = await userM.create({
+        email: 'test@gmail.com',
+        username: 'usernametest',
+        password: '@Spassword12',
+      });
+      await userM.findByIdAndUpdate(newUser.id, { $push: { skills: skill._id } }, { new: true });
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.SUPER_ADMIN] },
+        },
+        { new: true }
+      );
+      supertest(app)
+        .get(`/api/v1/users/talent?skills=${skill._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('data');
+          done();
+        });
+    });
+
+    it('should not search talent without permission', async (done) => {
+      const skill = await skillModel.create({ skill: 'Javascript' });
+      supertest(app)
+        .get(`/api/v1/users/talent?skills=${skill._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.FORBIDDEN);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+
+    it('should not search talent if not found', async (done) => {
+      const skill = await skillModel.create({ skill: 'Javascript' });
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.RECRUITMENT_ADMIN] },
+        },
+        { new: true }
+      );
+      supertest(app)
+        .get(`/api/v1/users/talent?skills=${skill._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.NOT_FOUND);
+          expect(res.body).toHaveProperty('message');
+          done();
+        });
+    });
+  });
+  describe('GET /users/talent?subscription=basic|standard|premium', () => {
+    it('should successfully search talent based on subscription', async (done) => {
+      const skill = await skillModel.create({ skill: 'Javascript' });
+      const newUser = await userM.create({
+        email: 'test@gmail.com',
+        username: 'usernametest',
+        password: '@Spassword12',
+      });
+      await userM.findByIdAndUpdate(newUser.id, { $push: { skills: skill._id } }, { new: true });
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.COMPANY_ADMIN] },
+        },
+        { new: true }
+      );
+      supertest(app)
+        .get(`/api/v1/users/talent?subscription=basic`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('data');
+          done();
+        });
+    });
+  });
 });

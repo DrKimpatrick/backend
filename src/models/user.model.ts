@@ -95,6 +95,14 @@ const userSchema = new Schema(
         default: null,
       },
     ],
+    courses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+        required: false,
+        default: null,
+      },
+    ],
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

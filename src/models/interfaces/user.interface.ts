@@ -20,4 +20,5 @@ export default interface IUser extends Document {
   // virtual properties
   name?: string;
   isSuperAdmin?: boolean;
+  courses?: string[];
 }

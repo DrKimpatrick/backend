@@ -92,3 +92,14 @@ export function userProfileRules() {
       ]),
   ];
 }
+
+export const courseValidator = () => {
+  return [
+    body('instructor', 'Instructor is required').not().isEmpty().trim().escape(),
+    body('name', 'Name is required').not().isEmpty().trim().escape(),
+    body('languageTaught', 'Language is required').not().isEmpty().trim().escape(),
+    body('existingCourseLink', 'Course link is required').not().isEmpty().trim().escape(),
+    body('currentLangSpecsUpdated', 'Current lang is required').isBoolean(),
+    body('coverImageLink', 'Cover image is required').not().isEmpty().trim().escape(),
+  ];
+};

@@ -1,3 +1,5 @@
+import { SIGNUP_MODE } from '../../../constants';
+
 const updateWrongEducationProfileData = {
   educationHistory: ['5f86b1a4c9233d2444064617'],
 };
@@ -46,4 +48,31 @@ const correctUserProfileData = {
   ],
 };
 
-export { updateWrongEducationProfileData, updateWrongSkillsData, correctUserProfileData };
+const addCourse = {
+  name: 'aaron',
+  currentLangSpecsUpdated: false,
+  instructor: 'snow',
+  languageTaught: 'English',
+  existingCourseLink: 'link',
+  coverImageLink: 'link',
+};
+
+const addUser = (role: string) => {
+  return {
+    signupMode: SIGNUP_MODE.LOCAL,
+    firstName: 'Some Name',
+    email: `pl${Math.random()}@gmail.com`,
+    username: `pl${Math.random()}@gmail.com`,
+    verified: true,
+    password: 'really',
+    roles: [role],
+  };
+};
+
+export {
+  updateWrongEducationProfileData,
+  updateWrongSkillsData,
+  correctUserProfileData,
+  addCourse,
+  addUser,
+};

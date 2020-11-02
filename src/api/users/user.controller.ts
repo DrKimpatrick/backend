@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
-import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
+import {
+  COURSE_VERIFICATION_STATUS,
+  DOCUMENT_ACTION,
+  MODELS,
+  STATUS_CODES,
+  USER_ROLES,
+} from '../../constants';
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
+import { ICourse } from '../../models/interfaces/course.interface';
 
 /**
  * @function UserController
@@ -227,6 +234,101 @@ export class UserController {
     } catch (error) {
       logger.info(error);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
+    }
+  };
+
+  registerCourse = async (req: Request, res: Response): Promise<Response<{ message: string }>> => {
+    try {
+      const id = req.currentUser?._id;
+
+      const userModel = ModelFactory.getModel(MODELS.USER);
+
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      const newCourse = await new courseModel({ ...req.body }).save();
+
+      // update user collections
+      await userModel.updateOne({ _id: id }, { $push: { courses: newCourse } });
+
+      return res.status(STATUS_CODES.CREATED).json({ message: 'course saved successfully' });
+    } catch (error) {
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'something went wrong' });
+    }
+  };
+
+  listCourses = async (req: Request, res: Response): Promise<Response<{ courses: ICourse[] }>> => {
+    try {
+      const { limit } = req.query;
+
+      const user = req.currentUser;
+
+      let courses: ICourse[];
+
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      const getTalentRole = user?.roles?.find((item) => item === USER_ROLES.TALENT);
+
+      if (getTalentRole) {
+        courses = await courseModel
+          .find(
+            { verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED },
+            {},
+            { limit: limit ? Number(limit) : undefined }
+          )
+          .sort({ createdAt: -1 });
+      } else {
+        courses = await courseModel
+          .find({}, {}, { limit: limit ? Number(limit) : undefined })
+          .sort({ createdAt: -1 });
+      }
+
+      return res.status(STATUS_CODES.OK).json({ courses });
+    } catch (error) {
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'something went wrong' });
+    }
+  };
+
+  listSpecificCourse = async (
+    req: Request,
+    res: Response
+  ): Promise<Response<{ course: ICourse }>> => {
+    try {
+      const { id } = req.params;
+
+      const user = req.currentUser;
+
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      let course: ICourse;
+
+      const getTalentRole = user?.roles?.find((item) => item === USER_ROLES.TALENT);
+
+      if (getTalentRole) {
+        //
+        course = await courseModel.findOne({
+          $and: [{ _id: id }, { verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED }],
+        });
+      } else {
+        course = await courseModel.findById(id);
+      }
+
+      return res.status(STATUS_CODES.OK).json({ course });
+    } catch (error) {
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'something went wrong' });
+    }
+  };
+
+  updateCourse = async (req: Request, res: Response): Promise<Response<{ message: string }>> => {
+    try {
+      const { id } = req.params;
+
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      await courseModel.findOneAndUpdate({ _id: id }, { $set: { ...req.body } });
+
+      return res.status(STATUS_CODES.OK).json({ message: 'course updated successfully' });
+    } catch (error) {
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'something went wrong' });
     }
   };
 }

@@ -46,6 +46,7 @@ export const MODELS = {
   EDUCATION_HISTORY: 'education-history',
   EMPLOYMENT_HISTORY: 'employment-history',
   BETA_TESTER: 'beta-tester',
+  COURSE: 'course',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';
@@ -71,4 +72,10 @@ export enum USER_ROLES {
   COMPANY_ADMIN = 'company_admin',
   TRAINNING_ADMIN = 'training_admin',
   TRAINING_AFFILIATE = 'training_affiliate',
+}
+
+export enum COURSE_VERIFICATION_STATUS {
+  ACCEPTED = 'accepted',
+  PENDING = 'pending',
+  DECLINED = 'declined',
 }

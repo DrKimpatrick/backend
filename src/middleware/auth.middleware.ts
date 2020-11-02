@@ -57,7 +57,11 @@ export const requireRoles = (roles: USER_ROLES[], checkAll = true) => (
 
   let authorized;
   if (checkAll) {
-    authorized = roles.every((role) => req.currentUser?.roles?.includes(role) as boolean);
+    for (const i in roles) {
+      if (req.currentUser?.roles?.includes(roles[i])) {
+        authorized = true;
+      }
+    }
   } else {
     authorized = roles.some((role) => req.currentUser?.roles?.includes(role) as boolean);
   }

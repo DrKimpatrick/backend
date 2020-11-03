@@ -97,6 +97,10 @@ export class UserController {
     }
   };
 
+  getAuthenticatedUser = async (req: Request, res: Response) => {
+    return res.status(STATUS_CODES.OK).json({ profile: req.currentUser });
+  };
+
   profileEdit = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;

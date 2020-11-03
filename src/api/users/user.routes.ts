@@ -210,6 +210,39 @@ const userRouter = Router();
 
 /**
  * @swagger
+ * /api/v1/users/me:
+ *   get:
+ *     summary: get authed User profile
+ *     tags: [Users]
+ *     description: Fetch User Profile
+ *     responses:
+ *       200:
+ *         description: Profile has been fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   $ref: '#/definitions/UserProfile'
+ *
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/me', userController.getAuthenticatedUser);
+
+/**
+ * @swagger
  * /api/v1/users/talent?skills=id,id or ?subscription=premium|standard|basic:
  *   get:
  *     summary: Retrieve talents based on skills or subscription

@@ -177,6 +177,19 @@ describe('User /users', () => {
         });
     });
 
+    it('/users/me, should return an authenticated user profile', async (done) => {
+      supertest(app)
+        .get(`/api/v1/users/me`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('profile');
+          expect(Array.isArray(res.body.data)).toBeFalsy();
+          expect(res.body.profile).toHaveProperty('_id');
+          done();
+        });
+    });
+
     it('/users/:id/education, should return user education', async (done) => {
       await skillModel.create({
         _id: correctUserProfileData.skills[0],

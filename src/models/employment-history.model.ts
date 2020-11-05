@@ -22,7 +22,6 @@ const employmentHistorySchema = new Schema(
     },
     endDate: {
       type: Date,
-      required: [true, 'This field is required'],
     },
     skillsUsed: {
       type: [String],
@@ -37,8 +36,22 @@ const employmentHistorySchema = new Schema(
       type: String,
     },
     verificationStatus: {
-      type: SKILL_VERIFICATION_STATUS,
+      type: String,
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
+      enum: [
+        SKILL_VERIFICATION_STATUS.IN_PROGRESS,
+        SKILL_VERIFICATION_STATUS.VERIFIED,
+        SKILL_VERIFICATION_STATUS.UNVERIFIED,
+      ],
+      required: true,
+    },
+    isCurrentPosition: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
     },
   },
   { timestamps: true }

@@ -32,8 +32,13 @@ export const courseSchema = new Schema(
       required: true,
     },
     verificationStatus: {
-      type: COURSE_VERIFICATION_STATUS,
+      type: String,
       required: true,
+      enum: [
+        COURSE_VERIFICATION_STATUS.PENDING,
+        COURSE_VERIFICATION_STATUS.ACCEPTED,
+        COURSE_VERIFICATION_STATUS.DECLINED,
+      ],
       default: COURSE_VERIFICATION_STATUS.PENDING,
     },
   },

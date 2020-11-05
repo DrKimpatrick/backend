@@ -1,6 +1,7 @@
 import { body } from 'express-validator';
 import validator from 'validator';
 import { FEATURE_CHOICE, PAYMENT_STATUS, SKILL_VERIFICATION_STATUS } from '../constants';
+import { isValid, isAfter } from 'date-fns';
 
 export const validateArrayOfStrings = (val: string[]) => {
   if (!Array.isArray(val)) return false;
@@ -101,5 +102,69 @@ export const courseValidator = () => {
     body('existingCourseLink', 'Course link is required').not().isEmpty().trim().escape(),
     body('currentLangSpecsUpdated', 'Current lang is required').isBoolean(),
     body('coverImageLink', 'Cover image is required').not().isEmpty().trim().escape(),
+  ];
+};
+
+export const employmentHistoryRules = () => {
+  return [
+    body('companyName').not().isEmpty().trim().escape().withMessage('company name is required'),
+    body('supervisor').not().isEmpty().trim().escape().withMessage('supervisor is required'),
+    body('title').not().isEmpty().trim().escape().withMessage('title is required'),
+    body('title').isLength({ min: 3 }).withMessage('title must be more than 3 characters'),
+    body('startDate').not().isEmpty().withMessage('start date is required'),
+    body('startDate').isISO8601().toDate().withMessage('start date must be valid'),
+    body('companyName').isString().withMessage('company name should be string'),
+    body('supervisor').isString().withMessage('supervisor should be string'),
+    body('title').isString().withMessage('title should be string'),
+    body('skillsUsed')
+      .custom((val) => {
+        if (!val) {
+          return true;
+        }
+
+        if (validateArrayOfStrings(val)) {
+          return true;
+        }
+        return Promise.reject('skills should be array of strings');
+      })
+      .optional(),
+    body('endDate').custom((val, { req }) => {
+      if (!req.body.isCurrentPosition || req.body.isCurrentPosition === false) {
+        const validateDate = isValid(new Date(val));
+
+        if (!validateDate) {
+          return Promise.reject('end date must be valid');
+        }
+
+        if (validateDate && !isAfter(new Date(val), new Date(req.body.startDate))) {
+          return Promise.reject('end date must be greater than start date');
+        }
+      }
+      return true;
+    }),
+    body('responsibilities')
+      .optional()
+      .custom((val) => {
+        if (!val) {
+          return true;
+        }
+
+        if (validateArrayOfStrings(val)) {
+          return true;
+        }
+        return Promise.reject('responsibilities should be array of strings');
+      }),
+    body('accomplishments')
+      .custom((val) => {
+        if (!val) {
+          return true;
+        }
+
+        if (validateArrayOfStrings(val)) {
+          return true;
+        }
+        return Promise.reject('accomplishment should be array of strings');
+      })
+      .optional(),
   ];
 };

@@ -69,10 +69,28 @@ const addUser = (role: string) => {
   };
 };
 
+const addNewEmployment = (userId: string) => {
+  return {
+    companyName: 'Twitter, Inc',
+    supervisor: 'Jack Dorsey',
+    title: 'Chief Technical Officer',
+    startDate: '2018-12-13',
+    endDate: '2020-12-20',
+    skillsUsed: ['javascript'],
+    responsibilities: ['responsibilities'],
+    accomplishments: ['head Boy'],
+    favoriteProject: 'Some Project',
+    verificationStatus: 'verified',
+    isCurrentPosition: false,
+    userId,
+  };
+};
+
 export {
   updateWrongEducationProfileData,
   updateWrongSkillsData,
   correctUserProfileData,
   addCourse,
   addUser,
+  addNewEmployment,
 };

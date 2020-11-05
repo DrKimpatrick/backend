@@ -11,6 +11,8 @@ import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
 import { ICourse } from '../../models/interfaces/course.interface';
 
+import { EmploymentHistory } from '../../models/interfaces/employment.interface';
+
 /**
  * @function UserController
  * @description Handles all user related business logic

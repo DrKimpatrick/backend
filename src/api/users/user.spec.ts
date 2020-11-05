@@ -9,6 +9,7 @@ import {
   updateWrongSkillsData,
   addCourse,
   addUser,
+  addNewEmployment,
 } from './__mocks__';
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 
@@ -23,6 +24,8 @@ describe('User /users', () => {
   let token: any;
   let user: any;
   let courseId: string;
+  let employmentId: string;
+  let userId: string;
 
   beforeEach(async () => {
     await userM.deleteMany({});
@@ -40,6 +43,7 @@ describe('User /users', () => {
       verified: true,
       password: 'really',
     });
+
     token = user.toAuthJSON().token;
   });
 

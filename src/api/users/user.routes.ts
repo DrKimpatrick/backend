@@ -109,6 +109,8 @@ const userRouter = Router();
  *         type: string
  *       verificationStatus:
  *         type: string
+ *       isCurrentPosition:
+ *         type: boolean
  *
  *   UserProfile:
  *      type: object
@@ -214,6 +216,12 @@ const userRouter = Router();
  *           coverImageLink:
  *             type: string
  *             example:  https://cover.com/image.jpeg
+ *
+ *   SuccessMessage:
+ *     type: object
+ *     properties:
+ *       message:
+ *         type: string
  */
 
 /**

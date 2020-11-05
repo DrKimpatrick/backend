@@ -24,7 +24,11 @@ const educationHistorySchema = new Schema(
     },
     endDate: {
       type: Date,
-      required: [true, 'This field is required'],
+      required: [false, 'This field is required'],
+    },
+    isCurrentEducation: {
+      type: Schema.Types.Boolean,
+      default: true,
     },
     accomplishments: {
       type: [String],
@@ -32,6 +36,7 @@ const educationHistorySchema = new Schema(
     verificationStatus: {
       type: SKILL_VERIFICATION_STATUS,
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
+      enum: Object.values(SKILL_VERIFICATION_STATUS),
     },
   },
   { timestamps: true }

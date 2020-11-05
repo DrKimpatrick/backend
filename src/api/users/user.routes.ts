@@ -39,6 +39,7 @@ const userRouter = Router();
  *       message:
  *         type: string
  *         description: Error message
+ *
  *   EducationHistory:
  *     type: object
  *     required:
@@ -66,6 +67,9 @@ const userRouter = Router();
  *         type: array
  *         items:
  *           type: string
+ *       isCurrentEducation:
+ *         type: boolean
+ *         default: true
  *       verificationStatus:
  *         type: string
  *
@@ -130,9 +134,13 @@ const userRouter = Router();
  *          items:
  *            type: string
  *        employmentHistory:
- *          $ref: '#/definitions/EmploymentHistory'
+ *          type: array
+ *          items:
+ *            $ref: '#/definitions/EmploymentHistory'
  *        educationHistory:
- *          $ref: '#/definitions/EducationHistory'
+ *          type: array
+ *          items:
+ *            $ref: '#/definitions/EducationHistory'
  *
  *   BetaTester:
  *     type: object
@@ -448,72 +456,6 @@ userRouter.get('/', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.listU
  *               $ref: '#/definitions/BetaTester'
  */
 userRouter.post('/beta-testers', validate(newBetaTesterRules()), userController.addBetaTester);
-
-/**
- * @swagger
- * /api/v1/users/{id}/education:
- *   get:
- *     summary: Fetch User Education History
- *     tags: [Users]
- *     description: Fetch User Education History
- *     parameters:
- *       - name: id
- *         in: path
- *         type: string
- *         required: true
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/definitions/EducationHistory'
- *       401:
- *          description: Unauthorized
- *          content:
- *            application/json:
- *              schema:
- *                $ref: '#definitions/ValidationError'
- */
-userRouter.get('/:id/education', userController.educationHistory);
-
-/**
- * @swagger
- * /api/v1/users/{id}/employment:
- *   get:
- *     summary: Fetch User Employment History
- *     tags: [Users]
- *     description: Fetch User Employment History
- *     parameters:
- *       - name: id
- *         in: path
- *         type: string
- *         required: true
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/definitions/EmploymentHistory'
- *       401:
- *          description: Unauthorized
- *          content:
- *            application/json:
- *              schema:
- *                $ref: '#definitions/ValidationError'
- */
-userRouter.get('/:id/employment', userController.employmentHistory);
 
 /**
  * @swagger

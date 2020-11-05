@@ -17,45 +17,6 @@ import { ICourse } from '../../models/interfaces/course.interface';
  *
  */
 export class UserController {
-  educationHistory = async (req: Request, res: Response) => {
-    try {
-      const userId = req.params.id;
-      const userModel = ModelFactory.getModel(MODELS.USER);
-      const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
-
-      const education = await userModel.findById(userId).select('educationHistory').exec();
-
-      let tmp = [];
-      if (education.educationHistory) {
-        tmp = await eduModel.find().where('_id').in(education.educationHistory).exec();
-      }
-      return res.json({ data: tmp });
-    } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
-    }
-  };
-
-  employmentHistory = async (req: Request, res: Response) => {
-    try {
-      const userId = req.params.id;
-      const userModel = ModelFactory.getModel(MODELS.USER);
-      const empModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
-
-      const employment = await userModel.findById(userId).select('employmentHistory').exec();
-
-      let tmp = [];
-      if (employment.employmentHistory) {
-        tmp = await empModel.find().where('_id').in(employment.employmentHistory).exec();
-      }
-
-      return res.json({ data: tmp });
-    } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
-    }
-  };
-
   async addBetaTester(req: Request, res: Response) {
     try {
       const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);

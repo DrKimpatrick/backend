@@ -41,6 +41,7 @@ export enum FEATURE_CHOICE {
 
 export const MODELS = {
   USER: 'user',
+  USER_SKILLS: 'user-skill',
   SOCIAL_AUTH: 'social-auth',
   SKILLS: 'skill',
   EDUCATION_HISTORY: 'education-history',

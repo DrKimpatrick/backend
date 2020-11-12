@@ -24,8 +24,8 @@ describe('Education /education', () => {
     expect(user.educationHistory.length).toEqual(0);
     education = await educationModel.create({
       schoolName: faker.name.title(),
-      startDate: format(faker.date.past(2), 'yyyy-MM-dd'),
-      endDate: format(faker.date.past(1), 'yyyy-MM-dd'),
+      startDate: format(faker.date.past(1, new Date(2019, 0, 1)), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
     });
     user = await userM.findByIdAndUpdate(
       user.id,
@@ -36,9 +36,6 @@ describe('Education /education', () => {
   };
 
   beforeEach(async () => {
-    await userM.deleteMany({});
-    await educationModel.deleteMany({});
-
     user = await userM.create({
       signupMode: SIGNUP_MODE.LOCAL,
       firstName: 'Some Name',
@@ -49,11 +46,6 @@ describe('Education /education', () => {
     });
     token = user.toAuthJSON().token;
     expect(Array.isArray(user.educationHistory)).toBeTruthy();
-  });
-
-  afterEach(async () => {
-    await userM.deleteMany({});
-    await educationModel.deleteMany({});
   });
 
   it('should Error on create an education record for this user', async (done) => {
@@ -84,8 +76,8 @@ describe('Education /education', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         schoolName: faker.name.title(),
-        startDate: format(faker.date.past(3), 'yyyy-MM-dd'),
-        endDate: format(faker.date.past(2), 'yyyy-MM-dd'),
+        startDate: format(faker.date.past(1, new Date(2019, 0, 1)), 'yyyy-MM-dd'),
+        endDate: format(new Date(), 'yyyy-MM-dd'),
       })
       .end(async (err, res) => {
         expect(res.status).toBe(STATUS_CODES.OK);

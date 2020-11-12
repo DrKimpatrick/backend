@@ -11,17 +11,6 @@ import { generateJWTToken } from '../../helpers';
 
 describe('Auth /auth', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
-  const socialM = ModelFactory.getModel(MODELS.SOCIAL_AUTH);
-
-  beforeEach(async () => {
-    await userM.deleteMany({});
-    await socialM.deleteMany({});
-  });
-
-  afterEach(async () => {
-    await userM.deleteMany({});
-    await socialM.deleteMany({});
-  });
 
   describe('POST /login', () => {
     it('responds with error missing credentials', (done: any) => {

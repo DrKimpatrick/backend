@@ -1,46 +1,22 @@
 import { Router } from 'express';
 import skillController from './skills.controller';
 import { validate } from '../../helpers/request-validation.helpers';
-import { skillsRules } from '../../helpers/skills-validation.helper';
+import {
+  skillsRules,
+  skillsUpdateRules,
+  userSkillsRules,
+  userSkillsUpdateRules,
+} from '../../helpers/skills-validation.helper';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
+import { bodyArray, bodyNotArray } from '../../helpers/body-validators';
 
-const adminRoles = [
-  USER_ROLES.SUPER_ADMIN,
-  USER_ROLES.COMPANY_ADMIN,
-  USER_ROLES.HR_ADMIN,
-  USER_ROLES.RECRUITMENT_ADMIN,
-  USER_ROLES.TRAINNING_ADMIN,
-];
+const adminRoles = [USER_ROLES.SUPER_ADMIN];
 
 const skillRouter = Router();
 /**
  * @swagger
  * definition:
- *   Error:
- *     type: object
- *     properties:
- *       error:
- *         type: string
- *         description: Error message
- *
- *   ValidationError:
- *     type: object
- *     properties:
- *       errors:
- *         type: array
- *         items:
- *           type: object
- *           properties:
- *             value:
- *               type: string
- *             msg:
- *               type: string
- *             param:
- *               type: string
- *             location:
- *               type: string
- *
  *   Skill:
  *     type: object
  *     required:
@@ -49,12 +25,163 @@ const skillRouter = Router();
  *       skill:
  *         type: string
  *         required: true
+ *
+ *   UserSkill:
+ *     type: object
+ *     required:
+ *       - skill
+ *     properties:
+ *       id:
+ *         type: string
+ *       skill:
+ *         type: string
+ *         description: Skills IDs
+ *         required: true
+ *       user:
+ *         type: string
+ *         description: User IDs
  *       level:
  *         type: string
  *       verificationStatus:
  *         type: string
  *
  */
+
+/**
+ * @swagger
+ * /api/v1/skills/me:
+ *   get:
+ *     summary: Retrieve Skills for a user
+ *     tags: [Skills, Users]
+ *     description: Retrieve Skills for a user
+ *
+ *     responses:
+ *       200:
+ *         description: Get a skill set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSkill'
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+skillRouter.get('/me', skillController.fetchUserSkills);
+
+/**
+ * @swagger
+ * /api/v1/skills/me:
+ *   post:
+ *     summary: Create Skills for a user
+ *     tags: [Skills, Users]
+ *     description: Create Skills for a user
+ *     parameters:
+ *       - name: skills
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               skill:
+ *                 type: string
+ *                 description: Id of SKill
+ *               level:
+ *                 type: string
+ *                 description: One of beginner|intermediate|advanced
+ *               verificationStatus:
+ *                 type: string
+ *                 description: One of verified|inProgress|unverified
+ *
+ *     responses:
+ *       200:
+ *         description: Get a skill set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSkill'
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+skillRouter.post(
+  '/me',
+  bodyArray('A list of User skills is expected'),
+  validate(userSkillsRules()),
+  skillController.createUserSkills
+);
+
+/**
+ * @swagger
+ * /api/v1/skills/me:
+ *   patch:
+ *     summary: Update Skills for a user
+ *     tags: [Skills]
+ *     description: Update Skills for a user
+ *     parameters:
+ *       - name: skills
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               userSkill:
+ *                 type: string
+ *                 description: Id of User SKill
+ *               level:
+ *                 type: string
+ *                 description: One of beginner|intermediate|advanced
+ *               verificationStatus:
+ *                 type: string
+ *                 description: One of verified|inProgress|unverified
+ *
+ *     responses:
+ *       200:
+ *         description: Get a skill set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSkill'
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+skillRouter.patch(
+  '/me',
+  bodyArray('A list of User skills is expected'),
+  validate(userSkillsUpdateRules()),
+  skillController.updateUserSkills
+);
 
 /**
  * @swagger
@@ -67,7 +194,9 @@ const skillRouter = Router();
  *       - in: body
  *         name: skill
  *         schema:
- *           $ref: '#/definitions/Skill'
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/Skill'
  *
  *     responses:
  *       200:
@@ -95,6 +224,7 @@ const skillRouter = Router();
 skillRouter.post(
   '/',
   requireRoles(adminRoles, false),
+  bodyArray('A list of skills is expected'),
   validate(skillsRules()),
   skillController.createSkills
 );
@@ -190,7 +320,7 @@ skillRouter.delete('/:id', requireRoles(adminRoles, false), skillController.dele
 /**
  * @swagger
  * /api/v1/skills/{id}:
- *   patch:
+ *   put:
  *     summary: Update a skill set
  *     tags: [Skills]
  *     description: Update a skill set
@@ -219,10 +349,11 @@ skillRouter.delete('/:id', requireRoles(adminRoles, false), skillController.dele
  *               $ref: '#definitions/Error'
  *
  */
-skillRouter.patch(
+skillRouter.put(
   '/:id',
   requireRoles(adminRoles, false),
-  validate(skillsRules()),
+  bodyNotArray(),
+  validate(skillsUpdateRules()),
   skillController.updateSkills
 );
 

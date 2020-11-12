@@ -1,6 +1,11 @@
 import { body } from 'express-validator';
 import validator from 'validator';
-import { FEATURE_CHOICE, PAYMENT_STATUS, SKILL_VERIFICATION_STATUS } from '../constants';
+import {
+  FEATURE_CHOICE,
+  PAYMENT_STATUS,
+  SKILL_LEVEL,
+  SKILL_VERIFICATION_STATUS,
+} from '../constants';
 import { isValid, isAfter } from 'date-fns';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -27,7 +32,9 @@ export function userProfileRules() {
     body('email').optional().isEmail(),
 
     // validate skills
-    body('skills.*').isMongoId().withMessage('skills must have valid IDs'),
+    body('skills.*.skill').isMongoId().withMessage('skills must have valid IDs'),
+    body('skills.*.level', 'Value not allowed').optional().isIn(Object.values(SKILL_LEVEL)),
+    body('skills.*.verificationStatus').optional().isIn(Object.values(SKILL_VERIFICATION_STATUS)),
 
     // validate Employment History
     body('employmentHistory.*.action').exists().isIn(['update', 'create', 'delete']),

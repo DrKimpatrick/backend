@@ -14,9 +14,6 @@ describe('Employment', () => {
   let user: any;
 
   beforeEach(async () => {
-    await userM.deleteMany({});
-    await empModel.deleteMany({});
-
     user = await userM.create(addUser(USER_ROLES.TALENT));
 
     token = user.toAuthJSON().token;
@@ -26,11 +23,6 @@ describe('Employment', () => {
     employmentId = newEmployment._id;
 
     userId = user._id;
-  });
-
-  afterEach(async () => {
-    await userM.deleteMany({});
-    await empModel.deleteMany({});
   });
 
   describe('Add new Employment history', () => {

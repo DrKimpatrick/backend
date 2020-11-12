@@ -10,8 +10,7 @@ import {
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
 import { ICourse } from '../../models/interfaces/course.interface';
-
-import { EmploymentHistory } from '../../models/interfaces/employment.interface';
+import { createSkills } from '../skills/skills.controller';
 
 /**
  * @function UserController
@@ -67,22 +66,18 @@ export class UserController {
   profileEdit = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;
-      const { password, skills } = req.body;
-      let { employmentHistory, educationHistory } = req.body;
+      const { password } = req.body;
+      let { employmentHistory, educationHistory, skills } = req.body;
 
       if (password) delete req.body.password;
 
       // validate Skills
       if (skills) {
-        const skillModel = ModelFactory.getModel(MODELS.SKILLS);
-        let records = await skillModel.find().where('_id').in(skills).select('_id').exec();
-        records = records.map((x) => x._id.toString());
-
-        const notFound = skills.filter((id: string) => !records.includes(id));
-        if (notFound.length > 0) {
-          return res
-            .status(STATUS_CODES.NOT_FOUND)
-            .json({ message: `Skills '${notFound}', could not be found` });
+        try {
+          skills = await createSkills(skills, userId);
+        } catch (e) {
+          logger.info(e);
+          return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
         }
       }
 
@@ -108,6 +103,7 @@ export class UserController {
       delete req.body?.educationHistory;
       // should not update email
       delete req.body?.email;
+      delete req.body?.skills;
 
       const userModel = ModelFactory.getModel(MODELS.USER);
       const user = await userModel
@@ -124,7 +120,7 @@ export class UserController {
         return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
       }
 
-      return res.json({ profile: user });
+      return res.json({ profile: { ...user.toJSON(), skills } });
     } catch (e) {
       logger.info(e);
       return res.status(STATUS_CODES.NOT_FOUND).json({ message: `Error: ${e.message}` });
@@ -182,12 +178,20 @@ export class UserController {
     const { subscription } = req.query;
     try {
       const userModel = ModelFactory.getModel(MODELS.USER);
+      const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
       let talents = [];
       if (skills) {
         const skillIds = skills.split(',');
-        talents = await userModel
-          .find({ skills: { $in: skillIds }, roles: [USER_ROLES.TALENT] })
+        const userSkills = await userSkillsModel
+          .find({ skill: { $in: skillIds } })
+          .populate({
+            path: 'user',
+            match: {
+              roles: { $in: [USER_ROLES.TALENT] },
+            },
+          })
           .exec();
+        talents = userSkills.map((x: Record<string, unknown>) => x.user).filter((x) => !!x);
       }
       if (subscription) {
         talents = await userModel

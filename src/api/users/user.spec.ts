@@ -4,37 +4,24 @@ import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES, USER_ROLES } from '../../constants';
 import {
+  addCourse,
+  addUser,
   correctUserProfileData,
   updateWrongEducationProfileData,
   updateWrongSkillsData,
-  addCourse,
-  addUser,
-  addNewEmployment,
 } from './__mocks__';
-import IBetaTester from '../../models/interfaces/beta-tester.interface';
 
 describe('User /users', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
   const skillModel = ModelFactory.getModel(MODELS.SKILLS);
-  const empModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
-  const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
-  const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
   const courseModel = ModelFactory.getModel(MODELS.COURSE);
+  const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
   let token: any;
   let user: any;
   let courseId: string;
-  let employmentId: string;
-  let userId: string;
 
   beforeEach(async () => {
-    await userM.deleteMany({});
-    await skillModel.deleteMany({});
-    await empModel.deleteMany({});
-    await eduModel.deleteMany({});
-    await betaTesterModel.deleteMany({});
-    await courseModel.deleteMany({});
-
     user = await userM.create({
       signupMode: SIGNUP_MODE.LOCAL,
       firstName: 'Some Name',
@@ -45,15 +32,6 @@ describe('User /users', () => {
     });
 
     token = user.toAuthJSON().token;
-  });
-
-  afterEach(async () => {
-    await userM.deleteMany({});
-    await skillModel.deleteMany({});
-    await empModel.deleteMany({});
-    await eduModel.deleteMany({});
-    await betaTesterModel.deleteMany({});
-    await courseModel.deleteMany({});
   });
 
   describe('PATCH /users/:id', () => {
@@ -79,8 +57,7 @@ describe('User /users', () => {
           expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body).toHaveProperty('errors');
           expect(Array.isArray(res.body.errors)).toBeTruthy();
-          expect(res.body.errors[0]).toHaveProperty('skills[0]');
-          expect(res.body.errors[0]['skills[0]']).toBe('skills must have valid IDs');
+          expect(res.body.errors[0]['skills[0].skill']).toBe('skills must have valid IDs');
           done();
         });
     });
@@ -90,10 +67,10 @@ describe('User /users', () => {
         .set('Authorization', `Bearer ${token}`)
         .send(correctUserProfileData)
         .end((err, res) => {
-          expect(res.status).toBe(STATUS_CODES.NOT_FOUND);
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
           expect(res.body).toHaveProperty('message');
           expect(res.body.message).toEqual(
-            `Skills '${correctUserProfileData.skills[0]}', could not be found`
+            `Skills '${correctUserProfileData.skills[0].skill}', could not be found`
           );
           done();
         });
@@ -101,7 +78,7 @@ describe('User /users', () => {
 
     it('should return success 200 on valid data', async (done) => {
       await skillModel.create({
-        _id: correctUserProfileData.skills[0],
+        _id: correctUserProfileData.skills[0].skill,
         skill: 'Django',
       });
 
@@ -272,7 +249,8 @@ describe('User /users', () => {
         username: 'usernametest',
         password: '@Spassword12',
       });
-      await userM.findByIdAndUpdate(newUser.id, { $push: { skills: skill._id } }, { new: true });
+      await userSkillsModel.create({ user: newUser.id, skill: skill.id });
+
       user = await userM.findByIdAndUpdate(
         user.id,
         {

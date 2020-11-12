@@ -71,14 +71,6 @@ const userSchema = new Schema(
       default: PAYMENT_STATUS.UNPAID,
       enum: Object.values(PAYMENT_STATUS),
     },
-    skills: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Skills',
-        required: false,
-        default: null,
-      },
-    ],
     employmentHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,

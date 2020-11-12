@@ -13,7 +13,7 @@ const userRouter = Router();
  *   Error:
  *     type: object
  *     properties:
- *       error:
+ *       message:
  *         type: string
  *         description: Error message
  *
@@ -33,12 +33,6 @@ const userRouter = Router();
  *               type: string
  *             location:
  *               type: string
- *   Error404:
- *     type: object
- *     properties:
- *       message:
- *         type: string
- *         description: Error message
  *
  *   EducationHistory:
  *     type: object
@@ -131,10 +125,6 @@ const userRouter = Router();
  *          type: string
  *        email:
  *          type: string
- *        skills:
- *          type: array
- *          items:
- *            type: string
  *        employmentHistory:
  *          type: array
  *          items:
@@ -293,13 +283,13 @@ userRouter.get('/me', userController.getAuthenticatedUser);
  *          content:
  *            application/json:
  *              schema:
- *                $ref: '#definitions/Error404'
+ *                $ref: '#definitions/Error'
  *       404:
  *          description: Not Found
  *          content:
  *            application/json:
  *              schema:
- *                $ref: '#definitions/Error404'
+ *                $ref: '#definitions/Error'
  */
 userRouter.get(
   '/talent',
@@ -325,7 +315,12 @@ userRouter.get(
  *       - in: body
  *         name: profile
  *         schema:
- *           $ref: '#/definitions/UserProfile'
+ *           allOf:
+ *             - $ref: '#/definitions/UserProfile'
+ *             - type: object
+ *               properties:
+ *                 skills:
+ *                   $ref: '#/definitions/UserSkill'
  *
  *     responses:
  *       200:

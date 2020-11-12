@@ -5,7 +5,7 @@ const updateWrongEducationProfileData = {
 };
 
 const updateWrongSkillsData = {
-  skills: [{ name: 'some name' }],
+  skills: [{ skill: 'some name' }],
 };
 
 const correctUserProfileData = {
@@ -17,7 +17,7 @@ const correctUserProfileData = {
   firstName: 'John',
   lastName: 'Smith',
   email: 'jsmith@email.com',
-  skills: ['5f86b1a4c9233d2444064617'],
+  skills: [{ skill: '5f86b1a4c9233d2444064617' }],
   employmentHistory: [
     {
       action: 'create',

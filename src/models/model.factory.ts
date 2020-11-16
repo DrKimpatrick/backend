@@ -1,10 +1,8 @@
-import { logger } from '../shared/winston';
 import path from 'path';
 import { Model, Document } from 'mongoose';
+import { logger } from '../shared/winston';
 
-const trimTs = (pathD: string) => {
-  return pathD.substr(0, pathD.length - 3);
-};
+const trimTs = (pathD: string) => pathD.substr(0, pathD.length - 3);
 
 class ModelFactory {
   /**

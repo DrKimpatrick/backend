@@ -1,0 +1,56 @@
+{
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "extends": [
+    "airbnb-typescript/base",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "tsconfig.json",
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-for-in-array": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/unbound-method": "off",
+    "@typescript-eslint/restrict-plus-operands": "off",
+    "@typescript-eslint/naming-convention": "off",
+    "import/extensions": "off",
+    "import/no-unresolved": "off",
+    "prefer-promise-reject-errors": "off",
+    "no-shadow": "off",
+    "class-methods-use-this": "off",
+    "max-len": "off",
+    "import/prefer-default-export": "off",
+    "import/no-named-as-default-member": "off",
+    "no-useless-escape": "off",
+    "no-underscore-dangle": "off",
+    "new-cap": "off",
+    "no-await-in-loop": "off",
+    "no-param-reassign": "off",
+    "import/no-dynamic-require": "off",
+    "global-require": "off",
+    "no-restricted-syntax": "off",
+    "consistent-return": "off"
+  }
+}

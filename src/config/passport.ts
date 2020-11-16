@@ -80,7 +80,7 @@ const callback = (provider: SOCIAL_AUTH_TYPES) => async (
         message: 'Invalid login.',
       });
     }
-    if (!!userEmail) {
+    if (userEmail) {
       const userModal = ModelFactory.getModel(MODELS.USER);
       let user = await userModal.findOne({ email: userEmail }).exec();
       if (!user) {

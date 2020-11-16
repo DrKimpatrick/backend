@@ -12,7 +12,6 @@ const mongoClient = (() => {
   };
 
   let instance: Connection;
-  let exists: boolean;
 
   const getClient = async () => {
     try {
@@ -25,7 +24,6 @@ const mongoClient = (() => {
       });
 
       instance = connection;
-      exists = true;
       logger.info('💾 Database connected');
 
       return instance;

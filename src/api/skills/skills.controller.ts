@@ -17,7 +17,7 @@ export async function checkMissingExist(skillIds: string[]) {
 }
 
 export async function createSkills(rawSkills: IUserSkill[], userId: string) {
-  let skills = rawSkills ? rawSkills : [];
+  let skills = rawSkills || [];
   // START: check if skills provided exist
   const skillIds = skills.map((x) => x.skill);
   const { notFound, found } = await checkMissingExist(skillIds);

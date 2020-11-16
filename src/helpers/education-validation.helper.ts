@@ -1,7 +1,7 @@
 import { body } from 'express-validator';
 import validator from 'validator';
-import { SKILL_VERIFICATION_STATUS } from '../constants';
 import { isAfter, isValid } from 'date-fns';
+import { SKILL_VERIFICATION_STATUS } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
   if (!Array.isArray(val)) return false;

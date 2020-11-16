@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import * as url from 'url';
 import path from 'path';
-import { environment } from '../../config/environment';
-import cache from '../../shared/cache';
 import passport from 'passport';
 import jsonwebtoken from 'jsonwebtoken';
+import { environment } from '../../config/environment';
+import cache from '../../shared/cache';
 import IUser from '../../models/interfaces/user.interface';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
@@ -13,7 +13,7 @@ import { getEmailTemplate } from '../../shared/email.templates';
 import { generateAccessToken, generateVerificationToken } from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
 import { BaseTokenPayload } from '../../interfaces';
-import { generateJWTToken } from '../../helpers/';
+import { generateJWTToken } from '../../helpers';
 
 /**
  * @function authController
@@ -139,6 +139,7 @@ export class AuthController {
       return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
     }
   }
+
   async forgetPassword(req: Request, res: Response) {
     const { email } = req.body;
     try {
@@ -174,6 +175,7 @@ export class AuthController {
       });
     }
   }
+
   async resetPassword(req: Request, res: Response) {
     const { password } = req.body;
     try {

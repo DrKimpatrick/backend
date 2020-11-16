@@ -59,9 +59,8 @@ export class UserController {
     }
   };
 
-  getAuthenticatedUser = async (req: Request, res: Response) => {
-    return res.status(STATUS_CODES.OK).json({ profile: req.currentUser });
-  };
+  getAuthenticatedUser = async (req: Request, res: Response) =>
+    res.status(STATUS_CODES.OK).json({ profile: req.currentUser });
 
   profileEdit = async (req: Request, res: Response) => {
     try {
@@ -84,7 +83,7 @@ export class UserController {
       // validate employmentHistory
       if (employmentHistory) {
         const empH = await this.editUserEmpEduHistory(MODELS.EMPLOYMENT_HISTORY, employmentHistory);
-        if (!!empH.error) {
+        if (empH.error) {
           return res.status(STATUS_CODES.NOT_FOUND).json({ message: empH.error });
         }
         employmentHistory = empH.data;
@@ -93,7 +92,7 @@ export class UserController {
       // validate educationHistory
       if (educationHistory) {
         const eduH = await this.editUserEmpEduHistory(MODELS.EDUCATION_HISTORY, educationHistory);
-        if (!!eduH.error) {
+        if (eduH.error) {
           return res.status(STATUS_CODES.NOT_FOUND).json({ message: eduH.error });
         }
         educationHistory = eduH.data;

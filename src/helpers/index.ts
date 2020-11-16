@@ -2,9 +2,7 @@ import * as crypto from 'crypto';
 import jsonwebtoken from 'jsonwebtoken';
 import { environment } from '../config/environment';
 
-export const genRandomString = () => {
-  return crypto.randomBytes(20).toString('hex');
-};
+export const genRandomString = () => crypto.randomBytes(20).toString('hex');
 
 export const encrypt = (unencrypted: string): { authTag: string; data: string } => {
   const hash = crypto.createHash('sha256').update('TECH_TALENT').digest();
@@ -32,12 +30,11 @@ export const decrypt = (encrypted: string, authTag: string): string => {
  * @param {object} data - data to passe in a token, e.g {id: user.id}
  * @param {number} expiresIn - expiration time in seconds
  */
-export const generateJWTToken = (data: object, expiresIn: number = 3600) => {
-  return jsonwebtoken.sign(
+export const generateJWTToken = (data: object, expiresIn = 3600) =>
+  jsonwebtoken.sign(
     {
       ...data,
       exp: Math.floor(Date.now() / 1000) + expiresIn,
     },
     environment.secretKey
   );
-};

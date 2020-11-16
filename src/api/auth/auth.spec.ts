@@ -355,7 +355,7 @@ describe('Auth /auth', () => {
   });
 
   describe('POST /forget-password', () => {
-    let testUser = {
+    const testUser = {
       email: 'resetpassword@test.com',
       username: 'resetpasswordtester',
       password: '#ThePassIs@strong',
@@ -387,7 +387,7 @@ describe('Auth /auth', () => {
   });
 
   describe('POST /reset-password', () => {
-    let testUser = {
+    const testUser = {
       email: 'resetpassword@test.com',
       username: 'resetpasswordtester',
       password: '#ThePassIs1@strong',

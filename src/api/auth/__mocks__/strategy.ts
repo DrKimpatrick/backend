@@ -12,7 +12,7 @@ const passportCallback = (
   }
 };
 
-// tslint:disable-next-line:function-name
+// eslint-disable-next-line
 function StrategyMock(name: string, strategyCallback = passportCallback, user?: any) {
   if (!name || name.length === 0) {
     throw new TypeError('DevStrategy requires a Strategy name');

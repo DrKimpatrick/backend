@@ -14,7 +14,7 @@
     "start:dev": "NODE_ENV=development nodemon",
     "start:debug": "NODE_ENV=development DEBUG=log nodemon --config nodemon-debug.json",
     "build": "rimraf ./dist && tsc --build tsconfig.build.json && mkdir ./dist/templates && cp -r ./src/templates ./dist",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "eslint . --ext .ts",
     "prettier:write": "prettier --write '**/*.ts'",
     "sexy:code": "yarn tsc && yarn lint && yarn prettier:write"
   },
@@ -78,6 +78,13 @@
     "@types/swagger-jsdoc": "^3.0.2",
     "@types/swagger-ui-express": "^4.1.2",
     "@types/validator": "^13.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.6.1",
+    "@typescript-eslint/eslint-plugin-tslint": "^4.6.1",
+    "@typescript-eslint/parser": "^4.6.1",
+    "eslint": "^7.13.0",
+    "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-import": "^2.22.1",
     "husky": "^4.3.0",
     "jest": "^26.4.2",
     "lint-staged": ">=10",
@@ -86,9 +93,6 @@
     "ts-jest": "^26.4.0",
     "ts-node": "^9.0.0",
     "tsconfig-paths": "^3.9.0",
-    "tslint": "^6.1.3",
-    "tslint-config-airbnb": "^5.11.2",
-    "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.0.3"
   }
 }

@@ -3,15 +3,15 @@ import NodeCache from 'node-cache';
 
 let cacheInstance: NodeCache;
 
+const saveToCache = (key: string, value: any): void => {
+  cacheInstance.set(key, JSON.stringify(value));
+};
+
 const cacheRedirectUrl = (req: Request, res: Response, next: (...args: any) => void) => {
   if (req.query.redirect_url) {
     saveToCache('SOCIAL_AUTH_REDIRECT_URL', req.query.redirect_url);
   }
   next();
-};
-
-const saveToCache = (key: string, value: any): void => {
-  cacheInstance.set(key, JSON.stringify(value));
 };
 
 const getFromCache = (key: string) => {

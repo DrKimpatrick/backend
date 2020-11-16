@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import authController from './auth.controller';
 import passport, { AuthenticateOptions } from 'passport';
+import authController from './auth.controller';
 import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
 import {

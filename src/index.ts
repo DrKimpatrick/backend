@@ -4,9 +4,9 @@ import morgan from 'morgan';
 import cors from 'cors';
 import swaggerUiExpress from 'swagger-ui-express';
 
+import passport from 'passport';
 import { v1Router } from './api/router';
 import swaggerConfig from './config/swagger';
-import passport from 'passport';
 import cache from './shared/cache';
 import { environment } from './config/environment';
 import { requireToken } from './middleware/auth.middleware';

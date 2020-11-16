@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   const errorStackFormat = format((info) => {
     if (info.stack) {
-      // tslint:disable-next-line:no-console
+      // eslint-disable-next-line no-console
       console.log(info.stack);
       return false;
     }

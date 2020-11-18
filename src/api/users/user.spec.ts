@@ -4,8 +4,6 @@ import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES, USER_ROLES } from '../../constants';
 import {
-  addCourse,
-  addUser,
   correctUserProfileData,
   updateWrongEducationProfileData,
   updateWrongSkillsData,
@@ -14,12 +12,10 @@ import {
 describe('User /users', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
   const skillModel = ModelFactory.getModel(MODELS.SKILLS);
-  const courseModel = ModelFactory.getModel(MODELS.COURSE);
   const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
   let token: any;
   let user: any;
-  let courseId: string;
 
   beforeEach(async () => {
     user = await userM.create({
@@ -326,154 +322,6 @@ describe('User /users', () => {
           expect(res.body).toHaveProperty('data');
           done();
         });
-    });
-  });
-
-  describe('POST /addCourse', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.TRAINING_AFFILIATE));
-
-      token = newUser.toAuthJSON().token;
-    });
-
-    it('should save new course', async () => {
-      const newCourse = await supertest(app)
-        .post('/api/v1/users/training/courses')
-        .set('Authorization', `Bearer ${token}`)
-        .send(addCourse);
-
-      expect(newCourse.status).toEqual(STATUS_CODES.CREATED);
-
-      expect(typeof newCourse.status).toEqual('number');
-    });
-
-    it('should return error when there is validation error', async () => {
-      const newCourse = await supertest(app)
-        .post('/api/v1/users/training/courses')
-        .set('Authorization', `Bearer ${token}`)
-        .send({});
-
-      expect(newCourse.status).toEqual(STATUS_CODES.BAD_REQUEST);
-    });
-  });
-
-  describe('Super Admin /List all courses', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
-      token = newUser.toAuthJSON().token;
-    });
-
-    it('should get all course', async () => {
-      const course = await supertest(app)
-        .get('/api/v1/users/training/courses')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(course.status).toEqual(STATUS_CODES.OK);
-
-      expect(typeof course.status).toEqual('number');
-
-      expect(course.body).toHaveProperty('courses');
-    });
-  });
-
-  describe('Talent / List all courses', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.TALENT));
-
-      token = newUser.toAuthJSON().token;
-    });
-
-    it('should get all course', async () => {
-      const course = await supertest(app)
-        .get('/api/v1/users/training/courses')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(course.status).toEqual(STATUS_CODES.OK);
-
-      expect(typeof course.status).toEqual('number');
-
-      expect(course.body).toHaveProperty('courses');
-    });
-  });
-
-  describe('Super Admin / List specific courses', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
-
-      const newCourse = await courseModel.create(addCourse);
-
-      token = newUser.toAuthJSON().token;
-
-      courseId = newCourse._id;
-    });
-
-    it('should get specific course', async () => {
-      const course = await supertest(app)
-        .get(`/api/v1/users/training/courses/${courseId}`)
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(course.status).toEqual(STATUS_CODES.OK);
-
-      expect(typeof course.status).toEqual('number');
-
-      expect(course.body).toHaveProperty('course');
-    });
-  });
-
-  describe('Talent / List specific courses', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.TALENT));
-
-      const newCourse = await courseModel.create(addCourse);
-
-      token = newUser.toAuthJSON().token;
-
-      courseId = newCourse._id;
-    });
-
-    it('should get specific course', async () => {
-      const course = await supertest(app)
-        .get(`/api/v1/users/training/courses/${courseId}`)
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(course.status).toEqual(STATUS_CODES.OK);
-
-      expect(typeof course.status).toEqual('number');
-
-      expect(course.body).toHaveProperty('course');
-    });
-  });
-
-  describe('Update Course', () => {
-    beforeEach(async () => {
-      const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
-
-      const newCourse = await courseModel.create(addCourse);
-
-      token = newUser.toAuthJSON().token;
-
-      courseId = newCourse._id;
-    });
-    it('should update course', async () => {
-      const course = await supertest(app)
-        .put(`/api/v1/users/training/courses/${courseId}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(addCourse);
-
-      expect(course.status).toEqual(STATUS_CODES.OK);
-
-      expect(typeof course.status).toEqual('number');
-
-      expect(course.body).toHaveProperty('message');
-    });
-
-    it('should return error when there is validation error', async () => {
-      const course = await supertest(app)
-        .put(`/api/v1/users/training/courses/${courseId}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({});
-
-      expect(course.status).toEqual(STATUS_CODES.BAD_REQUEST);
     });
   });
 });

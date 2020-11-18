@@ -31,6 +31,11 @@ export const courseSchema = new Schema(
       type: String,
       required: true,
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     verificationStatus: {
       type: String,
       required: true,

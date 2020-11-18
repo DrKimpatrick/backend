@@ -53,8 +53,8 @@ const addCourse = {
   currentLangSpecsUpdated: false,
   instructor: 'snow',
   languageTaught: 'English',
-  existingCourseLink: 'link',
-  coverImageLink: 'link',
+  existingCourseLink: 'https://youtube.com',
+  coverImageLink: 'https://images.com/image.png',
 };
 
 const addUser = (role: string) => {

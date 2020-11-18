@@ -102,12 +102,18 @@ export function userProfileRules() {
 }
 
 export const courseValidator = () => [
-  body('instructor', 'Instructor is required').not().isEmpty().trim().escape(),
-  body('name', 'Name is required').not().isEmpty().trim().escape(),
-  body('languageTaught', 'Language is required').not().isEmpty().trim().escape(),
-  body('existingCourseLink', 'Course link is required').not().isEmpty().trim().escape(),
+  body('instructor', 'Instructor is required').not().isEmpty(),
+  body('name', 'Name is required').not().isEmpty(),
+  body('languageTaught', 'Language is required').not().isEmpty(),
+  body('existingCourseLink', 'Course link is required').not().isEmpty(),
   body('currentLangSpecsUpdated', 'Current lang is required').isBoolean(),
-  body('coverImageLink', 'Cover image is required').not().isEmpty().trim().escape(),
+  body('coverImageLink', 'Cover image must is required').not().isEmpty(),
+  body('coverImageLink', 'Cover image must be valid link').matches(
+    /(^http[s]?:\/{2})|(^www)|(^\/{1,2})$/
+  ),
+  body('existingCourseLink', 'Course link must be valid link').matches(
+    /(^http[s]?:\/{2})|(^www)|(^\/{1,2})$/
+  ),
 ];
 
 export const employmentHistoryRules = () => [

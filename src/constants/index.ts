@@ -43,7 +43,7 @@ export const MODELS = {
   USER: 'user',
   USER_SKILLS: 'user-skill',
   SOCIAL_AUTH: 'social-auth',
-  SKILLS: 'skill',
+  SKILL: 'skill',
   EDUCATION_HISTORY: 'education-history',
   EMPLOYMENT_HISTORY: 'employment-history',
   BETA_TESTER: 'beta-tester',

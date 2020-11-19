@@ -13,4 +13,4 @@ const skillSchema = new Schema(
   { timestamps: true }
 );
 
-export = mongoose.model('Skills', skillSchema);
+export = mongoose.model('Skill', skillSchema);

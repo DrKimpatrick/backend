@@ -52,7 +52,7 @@ const skillRouter = Router();
  * /api/v1/skills/me:
  *   get:
  *     summary: Retrieve Skills for a user
- *     tags: [Skills, Users]
+ *     tags: [Skills]
  *     description: Retrieve Skills for a user
  *
  *     responses:
@@ -82,7 +82,7 @@ skillRouter.get('/me', skillController.fetchUserSkills);
  * /api/v1/skills/me:
  *   post:
  *     summary: Create Skills for a user
- *     tags: [Skills, Users]
+ *     tags: [Skills]
  *     description: Create Skills for a user
  *     parameters:
  *       - name: skills

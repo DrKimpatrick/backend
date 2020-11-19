@@ -395,4 +395,37 @@ userRouter.get('/', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.listU
  */
 userRouter.post('/beta-testers', validate(newBetaTesterRules()), userController.addBetaTester);
 
+/**
+ * @swagger
+ * /api/v1/users/:userId/skills:
+ *   get:
+ *     summary: Fetch skills for a given user
+ *     tags: [Users, Skills]
+ *     description: Fetch skills for a given user
+ *     responses:
+ *       200:
+ *         description: Get a skill set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSkill'
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+userRouter.get(
+  '/:userId/skills',
+  requireRoles([USER_ROLES.SUPER_ADMIN], false),
+  userController.fetchUserSkillsByUserId
+);
+
 export { userRouter };

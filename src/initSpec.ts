@@ -11,7 +11,7 @@ import IBetaTester from './models/interfaces/beta-tester.interface';
 
 const userM = ModelFactory.getModel(MODELS.USER);
 const socialM = ModelFactory.getModel(MODELS.SOCIAL_AUTH);
-const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+const skillModel = ModelFactory.getModel(MODELS.SKILL);
 const empModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
 const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
 const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);

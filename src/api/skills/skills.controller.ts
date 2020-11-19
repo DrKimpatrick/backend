@@ -5,7 +5,7 @@ import { logger } from '../../shared/winston';
 import { IUserSkill } from '../../interfaces';
 
 export async function checkMissingExist(skillIds: string[]) {
-  const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+  const skillModel = ModelFactory.getModel(MODELS.SKILL);
   let records = await skillModel.find().where('_id').in(skillIds).select('_id').exec();
   records = records.map((x) => x._id.toString());
   const notFound = skillIds.filter((id: string) => !records.includes(id));
@@ -21,6 +21,8 @@ export async function createSkills(rawSkills: IUserSkill[], userId: string) {
   // START: check if skills provided exist
   const skillIds = skills.map((x) => x.skill);
   const { notFound, found } = await checkMissingExist(skillIds);
+  const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+
   if (notFound && notFound.length > 0) {
     // may be create the non existing skills here, a feature to be added later if needed
     throw new Error(`Skills '${notFound}', could not be found`);
@@ -32,7 +34,6 @@ export async function createSkills(rawSkills: IUserSkill[], userId: string) {
   // attach skill to current user
   skills = skills.map((x) => ({ ...x, user: userId }));
 
-  const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
   await userSkillModel.create(skills);
   return userSkillModel.find({ user: userId }).populate('skill').select('-user').exec();
 }
@@ -49,7 +50,7 @@ export class SkillsController {
       // make sure we dont save unwanted fields
       skills = skills.map((x: Record<string, unknown>) => ({ skill: x.skill }));
 
-      const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+      const skillModel = ModelFactory.getModel(MODELS.SKILL);
       const data = await skillModel.create(skills);
 
       return res.status(STATUS_CODES.CREATED).json({ data });
@@ -62,7 +63,7 @@ export class SkillsController {
   fetchSkills = async (req: Request, res: Response) => {
     try {
       const skillId = req.params.id;
-      const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+      const skillModel = ModelFactory.getModel(MODELS.SKILL);
       let data;
       if (skillId) {
         data = await skillModel.findById(skillId).exec();
@@ -80,7 +81,7 @@ export class SkillsController {
   deleteSkills = async (req: Request, res: Response) => {
     try {
       const skillId = req.params.id;
-      const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+      const skillModel = ModelFactory.getModel(MODELS.SKILL);
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
       const data = await skillModel.findByIdAndDelete(skillId).exec();
 
@@ -97,7 +98,7 @@ export class SkillsController {
   updateSkills = async (req: Request, res: Response) => {
     try {
       const skillId = req.params.id;
-      const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+      const skillModel = ModelFactory.getModel(MODELS.SKILL);
 
       const update = req.body || {};
 
@@ -113,8 +114,12 @@ export class SkillsController {
   fetchUserSkills = async (req: Request, res: Response) => {
     try {
       const userId = req.currentUser?.id;
-      const userModel = ModelFactory.getModel(MODELS.USER_SKILLS);
-      const data = await userModel.find({ user: userId }).populate('skill').select('-user').exec();
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+      const data = await userSkillModel
+        .find({ user: userId })
+        .populate('skill')
+        .select('-user')
+        .exec();
 
       return res.json({ data });
     } catch (e) {
@@ -135,7 +140,7 @@ export class SkillsController {
 
       return res.status(status).json({ data });
     } catch (e) {
-      logger.info(e);
+      logger.error(e);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ message: e.message });
     }
   };

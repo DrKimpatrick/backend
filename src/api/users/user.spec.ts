@@ -11,7 +11,8 @@ import {
 
 describe('User /users', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
-  const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+  const skillModel = ModelFactory.getModel(MODELS.SKILL);
+  const courseModel = ModelFactory.getModel(MODELS.COURSE);
   const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
   let token: any;
@@ -28,6 +29,13 @@ describe('User /users', () => {
     });
 
     token = user.toAuthJSON().token;
+  });
+
+  afterEach(async () => {
+    await userM.deleteMany({});
+    await skillModel.deleteMany({});
+    await courseModel.deleteMany({});
+    await userSkillsModel.deleteMany({});
   });
 
   describe('PATCH /users/:id', () => {
@@ -57,6 +65,7 @@ describe('User /users', () => {
           done();
         });
     });
+
     it('should return an error when skill is not found', (done) => {
       supertest(app)
         .patch(`/api/v1/users/${user.id}`)
@@ -169,12 +178,6 @@ describe('User /users', () => {
   });
 
   describe('POST /users/beta-testers', () => {
-    // const tester = await betaTesterModel.create({
-    //   email: faker.internet.email(),
-    //   name: faker.name.findName(),
-    //   accountType: faker.random.arrayElement(['company', 'talent']),
-    // });
-
     it('should successfully save beta tester information with valid data', (done) => {
       supertest(app)
         .post('/api/v1/users/beta-testers')
@@ -237,6 +240,7 @@ describe('User /users', () => {
         });
     });
   });
+
   describe('GET /users/talent?skills=id,id', () => {
     it('should successfully search talent based on skills', async (done) => {
       const skill = await skillModel.create({ skill: 'Javascript' });
@@ -297,6 +301,7 @@ describe('User /users', () => {
         });
     });
   });
+
   describe('GET /users/talent?subscription=basic|standard|premium', () => {
     it('should successfully search talent based on subscription', async (done) => {
       const skill = await skillModel.create({ skill: 'Javascript' });
@@ -320,6 +325,58 @@ describe('User /users', () => {
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.OK);
           expect(res.body).toHaveProperty('data');
+          done();
+        });
+    });
+  });
+
+  describe('GET /api/v1/users/:userId/skills', () => {
+    let user: any;
+    let userToken: any;
+    let superAdmin: any;
+    let adminToken: any;
+
+    beforeEach(async () => {
+      user = await userM.create({
+        signupMode: SIGNUP_MODE.LOCAL,
+        firstName: faker.name.firstName(),
+        email: faker.internet.email(),
+        username: faker.internet.userName(),
+        verified: true,
+        password: 'a#GoodPass@Woord',
+      });
+      userToken = user.toAuthJSON().token;
+
+      superAdmin = await userM.create({
+        signupMode: SIGNUP_MODE.LOCAL,
+        firstName: faker.name.firstName(),
+        email: faker.internet.email(),
+        username: faker.internet.userName(),
+        verified: true,
+        password: 'a#GoodPass@Woord2',
+        roles: [USER_ROLES.SUPER_ADMIN],
+      });
+      adminToken = superAdmin.toAuthJSON().token;
+    });
+
+    it('should fetch all courses for a given user', (done) => {
+      supertest(app)
+        .get(`/api/v1/users/${user.id}/skills`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('data');
+          done();
+        });
+    });
+
+    it('should not fetch courses if user has the wrong role', (done) => {
+      supertest(app)
+        .get(`/api/v1/users/${user.id}/skills`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.FORBIDDEN);
+          expect(res.body).toHaveProperty('message');
           done();
         });
     });

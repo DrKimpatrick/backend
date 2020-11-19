@@ -7,7 +7,7 @@ const userSkillSchema = new Schema(
   {
     skill: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Skills',
+      ref: 'Skill',
       required: false,
       default: null,
       unique: false,
@@ -33,4 +33,4 @@ const userSkillSchema = new Schema(
 // unique together
 userSkillSchema.index({ skill: 1, user: 1 }, { unique: true });
 
-export = mongoose.model('UserSkills', userSkillSchema);
+export = mongoose.model('UserSkill', userSkillSchema);

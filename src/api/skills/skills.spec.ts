@@ -13,7 +13,7 @@ import {
 
 describe('Skills /skills', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
-  const skillModel = ModelFactory.getModel(MODELS.SKILLS);
+  const skillModel = ModelFactory.getModel(MODELS.SKILL);
   const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
   let token: any;

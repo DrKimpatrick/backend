@@ -32,7 +32,13 @@ export class UserController {
   listUsers = async (req: Request, res: Response) => {
     try {
       const userModel = ModelFactory.getModel(MODELS.USER);
-      const users = await userModel.find().exec();
+      const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
+      const edHistoryModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
+      const users = await userModel
+        .find()
+        .populate({ path: 'educationHistory', model: emHistoryModel })
+        .populate({ path: 'educationHistory', model: edHistoryModel })
+        .exec();
       return res.json({ data: users });
     } catch (e) {
       logger.info(e);
@@ -44,7 +50,13 @@ export class UserController {
     try {
       const userId = req.params.id;
       const userModel = ModelFactory.getModel(MODELS.USER);
-      const user = await userModel.findById(userId).exec();
+      const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
+      const educationModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
+      const user = await userModel
+        .findById(userId)
+        .populate({ path: 'educationHistory', model: emHistoryModel })
+        .populate({ path: 'educationHistory', model: educationModel })
+        .exec();
       return res.json({ profile: user });
     } catch (e) {
       logger.info(e);
@@ -197,6 +209,20 @@ export class UserController {
     } catch (error) {
       logger.info(error);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
+    }
+  };
+
+  fetchUserSkillsByUserId = async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+
+      const data = await userSkillModel.find({ user: userId }).select('-user').exec();
+
+      return res.status(STATUS_CODES.OK).json({ data });
+    } catch (error) {
+      logger.error(error);
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: error.message });
     }
   };
 }

@@ -38,3 +38,8 @@ export const generateJWTToken = (data: object, expiresIn = 3600) =>
     },
     environment.secretKey
   );
+
+export const getPagination = (page: number, limit: number) => {
+  const offset = page > 0 ? (page - 1) * limit : 1;
+  return { offset, itemPerPage: limit };
+};

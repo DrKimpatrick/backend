@@ -4,6 +4,7 @@ import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constan
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
 import { createSkills } from '../skills/skills.controller';
+import { getPagination } from '../../helpers';
 
 /**
  * @function UserController
@@ -30,6 +31,9 @@ export class UserController {
   }
 
   listUsers = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const { offset, itemPerPage } = getPagination(Number(page), Number(limit));
+
     try {
       const userModel = ModelFactory.getModel(MODELS.USER);
       const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
@@ -38,8 +42,17 @@ export class UserController {
         .find()
         .populate({ path: 'educationHistory', model: emHistoryModel })
         .populate({ path: 'educationHistory', model: edHistoryModel })
+        .limit(itemPerPage)
+        .skip(offset)
         .exec();
-      return res.json({ data: users });
+      const count = await userModel.countDocuments();
+
+      return res.json({
+        data: users,
+        currentPage: Number(page),
+        totalDocs: count,
+        limit: itemPerPage,
+      });
     } catch (e) {
       logger.info(e);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });

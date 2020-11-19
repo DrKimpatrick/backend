@@ -329,7 +329,7 @@ userRouter.get('/:id', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.ge
 
 /**
  * @swagger
- * /api/v1/users/:
+ * /api/v1/users/?page={integer}&limit={integer}:
  *   get:
  *     summary: Retrieve all Users profile
  *     tags: [Users]

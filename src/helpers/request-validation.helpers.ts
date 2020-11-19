@@ -102,13 +102,13 @@ export function registrationRules() {
 }
 
 export function newBetaTesterRules() {
-  const betaTersModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
+  const betaTestersModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
   return [
     body('email', 'Valid email is required')
       .isEmail()
       .normalizeEmail()
       .custom((value) =>
-        betaTersModel.findOne({ email: value }).then((user) => {
+        betaTestersModel.findOne({ email: value }).then((user) => {
           if (user) {
             return Promise.reject('This email address is already part of the beta programme');
           }

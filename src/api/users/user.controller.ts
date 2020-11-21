@@ -31,27 +31,28 @@ export class UserController {
   }
 
   listUsers = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
-    const { offset, itemPerPage } = getPagination(Number(page), Number(limit));
-
+    const rolesAsString = req.query.roles as string;
+    let condition = {};
+    if (rolesAsString) {
+      condition = { roles: { $in: rolesAsString.split(',') } };
+    }
     try {
       const userModel = ModelFactory.getModel(MODELS.USER);
+      const { limit, page, offset, totalDocs } = await getPagination(req, userModel);
       const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
       const edHistoryModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
       const users = await userModel
-        .find()
-        .populate({ path: 'educationHistory', model: emHistoryModel })
-        .populate({ path: 'educationHistory', model: edHistoryModel })
-        .limit(itemPerPage)
+        .find(condition)
+        .limit(limit)
         .skip(offset)
+        .populate({ path: 'employmentHistory', model: emHistoryModel })
+        .populate({ path: 'educationHistory', model: edHistoryModel })
         .exec();
-      const count = await userModel.countDocuments();
-
       return res.json({
         data: users,
-        currentPage: Number(page),
-        totalDocs: count,
-        limit: itemPerPage,
+        currentPage: page,
+        totalDocs,
+        limit,
       });
     } catch (e) {
       logger.info(e);
@@ -67,7 +68,7 @@ export class UserController {
       const educationModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
       const user = await userModel
         .findById(userId)
-        .populate({ path: 'educationHistory', model: emHistoryModel })
+        .populate({ path: 'employmentHistory', model: emHistoryModel })
         .populate({ path: 'educationHistory', model: educationModel })
         .exec();
       return res.json({ profile: user });

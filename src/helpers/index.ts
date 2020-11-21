@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
 import jsonwebtoken from 'jsonwebtoken';
+import { Model } from 'mongoose';
+import { Request } from 'express';
 import { environment } from '../config/environment';
 
 export const genRandomString = () => crypto.randomBytes(20).toString('hex');
@@ -39,7 +41,10 @@ export const generateJWTToken = (data: object, expiresIn = 3600) =>
     environment.secretKey
   );
 
-export const getPagination = (page: number, limit: number) => {
+export const getPagination = async (req: Request, model: Model<any>) => {
+  const limit = Number(req.query.limit) || 10;
+  const page = Number(req.query.page) || 1;
   const offset = page > 0 ? (page - 1) * limit : 1;
-  return { offset, itemPerPage: limit };
+  const totalDocs = await model.countDocuments();
+  return { limit, page, offset, totalDocs };
 };

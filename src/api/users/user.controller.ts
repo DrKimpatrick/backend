@@ -231,7 +231,7 @@ export class UserController {
       const { userId } = req.params;
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
-      const data = await userSkillModel.find({ user: userId }).select('-user').exec();
+      const data = await userSkillModel.find({ user: userId }).select('-user').populate('skill').exec();
 
       return res.status(STATUS_CODES.OK).json({ data });
     } catch (error) {

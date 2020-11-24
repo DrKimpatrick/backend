@@ -41,10 +41,10 @@ export const generateJWTToken = (data: object, expiresIn = 3600) =>
     environment.secretKey
   );
 
-export const getPagination = async (req: Request, model: Model<any>) => {
+export const getPagination = async (req: Request, model: Model<any>, condition = {}) => {
   const limit = Number(req.query.limit) || 10;
   const page = Number(req.query.page) || 1;
   const offset = page > 0 ? (page - 1) * limit : 1;
-  const totalDocs = await model.countDocuments();
+  const totalDocs = await model.countDocuments(condition);
   return { limit, page, offset, totalDocs };
 };

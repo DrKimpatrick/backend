@@ -38,7 +38,7 @@ export class UserController {
     }
     try {
       const userModel = ModelFactory.getModel(MODELS.USER);
-      const { limit, page, offset, totalDocs } = await getPagination(req, userModel);
+      const { limit, page, offset, totalDocs } = await getPagination(req, userModel, condition);
       const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
       const edHistoryModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
       const users = await userModel
@@ -231,7 +231,11 @@ export class UserController {
       const { userId } = req.params;
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
-      const data = await userSkillModel.find({ user: userId }).select('-user').populate('skill').exec();
+      const data = await userSkillModel
+        .find({ user: userId })
+        .select('-user')
+        .populate('skill')
+        .exec();
 
       return res.status(STATUS_CODES.OK).json({ data });
     } catch (error) {

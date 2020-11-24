@@ -381,4 +381,25 @@ describe('User /users', () => {
         });
     });
   });
+
+  it('should return single user by username', async (done) => {
+    user = await userM.findByIdAndUpdate(
+      user.id,
+      {
+        // @ts-ignore
+        $push: { roles: [USER_ROLES.SUPER_ADMIN] },
+      },
+      { new: true }
+    );
+
+    supertest(app)
+      .get(`/api/v1/users/${user.username}`)
+      .set('Authorization', `Bearer ${token}`)
+      .end((err, res) => {
+        expect(res.status).toBe(STATUS_CODES.OK);
+        expect(res.body).toHaveProperty('profile');
+        expect(res.body.profile).toHaveProperty('_id');
+        done();
+      });
+  });
 });

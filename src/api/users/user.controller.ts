@@ -5,6 +5,7 @@ import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { logger } from '../../shared/winston';
 import { createSkills } from '../skills/skills.controller';
 import { getPagination } from '../../helpers';
+import User from '../../models/interfaces/user.interface';
 
 /**
  * @function UserController
@@ -63,18 +64,37 @@ export class UserController {
   getUser = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;
+
       const userModel = ModelFactory.getModel(MODELS.USER);
+
       const emHistoryModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
+
       const educationModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
-      const user = await userModel
-        .findById(userId)
+
+      let user: User;
+
+      const findUserByUsername = await userModel
+        .findOne({ username: userId })
         .populate({ path: 'employmentHistory', model: emHistoryModel })
         .populate({ path: 'educationHistory', model: educationModel })
         .exec();
+
+      if (findUserByUsername) {
+        user = findUserByUsername;
+      } else {
+        user = await userModel
+          .findById(userId)
+          .populate({ path: 'employmentHistory', model: emHistoryModel })
+          .populate({ path: 'educationHistory', model: educationModel })
+          .exec();
+      }
+
       return res.json({ profile: user });
     } catch (e) {
       logger.info(e);
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'Unable to fetch user due to internal server error' });
     }
   };
 

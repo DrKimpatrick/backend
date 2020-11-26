@@ -248,6 +248,7 @@ describe('User /users', () => {
         email: 'test@gmail.com',
         username: 'usernametest',
         password: '@Spassword12',
+        roles: 'talent',
       });
       await userSkillsModel.create({ user: newUser.id, skill: skill.id });
 
@@ -309,6 +310,7 @@ describe('User /users', () => {
         email: 'test@gmail.com',
         username: 'usernametest',
         password: '@Spassword12',
+        roles: 'talent',
       });
       await userM.findByIdAndUpdate(newUser.id, { $push: { skills: skill._id } }, { new: true });
       user = await userM.findByIdAndUpdate(

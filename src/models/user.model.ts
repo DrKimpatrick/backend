@@ -54,7 +54,7 @@ const userSchema = new Schema(
     },
     roles: {
       type: [String],
-      default: ['talent'],
+      default: null,
       enum: Object.values(USER_ROLES),
     },
     verified: {

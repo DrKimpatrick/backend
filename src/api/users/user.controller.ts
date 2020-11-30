@@ -104,7 +104,17 @@ export class UserController {
   profileEdit = async (req: Request, res: Response) => {
     try {
       const userId = req.params.id;
-      const { password } = req.body;
+
+      const currentUserId = req.currentUser?.id;
+      if (!req.currentUser || !req.currentUser.isSuperAdmin) {
+        if (userId !== currentUserId?.toString()) {
+          return res.status(STATUS_CODES.UNAUTHORIZED).json({
+            error: 'You are not authorized to update this profile',
+          });
+        }
+      }
+
+      const { password, roles } = req.body;
       let { employmentHistory, educationHistory, skills } = req.body;
 
       if (password) delete req.body.password;
@@ -137,6 +147,13 @@ export class UserController {
         educationHistory = eduH.data;
       }
 
+      const setUpdate: any = { employmentHistory, educationHistory };
+      if (roles) {
+        setUpdate.roles = roles;
+      }
+
+      delete req.body?.roles;
+      delete req.body?.role;
       delete req.body?.employmentHistory;
       delete req.body?.educationHistory;
       // should not update email
@@ -145,14 +162,7 @@ export class UserController {
 
       const userModel = ModelFactory.getModel(MODELS.USER);
       const user = await userModel
-        .findByIdAndUpdate(
-          userId,
-          {
-            ...req.body,
-            $set: { employmentHistory, educationHistory },
-          },
-          { new: true }
-        )
+        .findByIdAndUpdate(userId, { ...req.body, $set: setUpdate }, { new: true })
         .exec();
       if (user == null) {
         return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });

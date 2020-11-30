@@ -9,7 +9,7 @@ const updateWrongSkillsData = {
 };
 
 const correctUserProfileData = {
-  role: 'talent',
+  roles: ['talent'],
   featureChoice: 'premium',
   paymentStatus: 'unpaid',
   profileStatus: 'draft|pusblished',

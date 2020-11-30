@@ -6,6 +6,7 @@ import {
   PAYMENT_STATUS,
   SKILL_LEVEL,
   SKILL_VERIFICATION_STATUS,
+  USER_ROLES,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -19,7 +20,23 @@ export const validateArrayOfStrings = (val: string[]) => {
 
 export function userProfileRules() {
   return [
-    body('role', 'Role must have a value').optional().notEmpty({ ignore_whitespace: true }),
+    body('roles', 'Role must have a value')
+      .optional()
+      .custom((value) => {
+        if (!Array.isArray(value)) {
+          return Promise.reject('roles should be an array');
+        }
+        if (value.length > 1) {
+          return Promise.reject(`One role is allowed for a user, you provided ${value.length}`);
+        }
+        const options = Object.values(USER_ROLES);
+        for (const val of value) {
+          if (!options.includes(val)) {
+            return Promise.reject(`Role:'${val}', is not allowed`);
+          }
+        }
+        return true;
+      }),
     body('featureChoice', 'This field must have a value')
       .optional()
       .isIn([FEATURE_CHOICE.BASIC, FEATURE_CHOICE.STANDARD, FEATURE_CHOICE.PREMIUM]),

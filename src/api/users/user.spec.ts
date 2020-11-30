@@ -81,11 +81,58 @@ describe('User /users', () => {
         });
     });
 
+    it('should return success 400 on invalid role value', async (done) => {
+      await skillModel.create({
+        _id: correctUserProfileData.skills[0].skill,
+        skill: 'Django',
+      });
+
+      supertest(app)
+        .patch(`/api/v1/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...correctUserProfileData, roles: 'talent' })
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect(res.body).toHaveProperty('errors');
+          expect(Array.isArray(res.body.errors)).toBeTruthy();
+          expect(res.body.errors).toHaveLength(1);
+          expect(res.body.errors[0]).toHaveProperty('roles');
+          expect(res.body.errors[0].roles).toEqual('roles should be an array');
+          // email should not be updated
+          done();
+        });
+    });
+
+    it('should return success 400 when given non existent role', async (done) => {
+      await skillModel.create({
+        _id: correctUserProfileData.skills[0].skill,
+        skill: 'Django',
+      });
+
+      supertest(app)
+        .patch(`/api/v1/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...correctUserProfileData, roles: ['not-talent'] })
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+          expect(res.body).toHaveProperty('errors');
+          expect(Array.isArray(res.body.errors)).toBeTruthy();
+          expect(res.body.errors).toHaveLength(1);
+          expect(res.body.errors[0]).toHaveProperty('roles');
+          expect(res.body.errors[0].roles).toEqual("Role:'not-talent', is not allowed");
+          // email should not be updated
+          done();
+        });
+    });
+
     it('should return success 200 on valid data', async (done) => {
       await skillModel.create({
         _id: correctUserProfileData.skills[0].skill,
         skill: 'Django',
       });
+
+      expect(Array.isArray(user.roles)).toBeTruthy();
+      expect(user.roles).not.toContain(USER_ROLES.TALENT);
 
       supertest(app)
         .patch(`/api/v1/users/${user.id}`)
@@ -99,6 +146,8 @@ describe('User /users', () => {
           // email should not be updated
           expect(res.body.profile.email).toEqual('test@email.com');
           expect(res.body.profile.firstName).toEqual('John');
+          expect(Array.isArray(res.body.profile.roles)).toBeTruthy();
+          expect(res.body.profile.roles).toContain(USER_ROLES.TALENT);
           done();
         });
     });

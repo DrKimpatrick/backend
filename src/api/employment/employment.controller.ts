@@ -181,6 +181,38 @@ export class EmploymentController {
       return res.status(STATUS_CODES.SERVER_ERROR).json({ error: 'something went wrong' });
     }
   };
+
+  changeEmploymentStatus = async (
+    req: Request,
+    res: Response
+  ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
+    try {
+      const { id } = req.params;
+
+      const { verificationStatus } = req.body;
+
+      const employmentModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
+
+      const updateEmployment = await employmentModel.findByIdAndUpdate(
+        { _id: id },
+        { $set: { verificationStatus } },
+        { new: true, runValidators: true }
+      );
+
+      if (!updateEmployment) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'employment not found' });
+      }
+
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ data: updateEmployment, message: 'updated successfully' });
+    } catch (error) {
+      logger.info(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'unable to perform this action due to internal server error' });
+    }
+  };
 }
 
 const employmentController = new EmploymentController();

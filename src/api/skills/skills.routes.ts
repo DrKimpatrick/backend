@@ -10,6 +10,7 @@ import {
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 import { bodyArray, bodyNotArray } from '../../helpers/body-validators';
+import { verificationStatusRule } from '../../helpers/user-profile-validation.helper';
 
 const adminRoles = [USER_ROLES.SUPER_ADMIN];
 
@@ -355,6 +356,46 @@ skillRouter.put(
   bodyNotArray(),
   validate(skillsUpdateRules()),
   skillController.updateSkills
+);
+
+/**
+ * @swagger
+ * /api/v1/skills/status/{id}:
+ *   put:
+ *     summary: change status
+ *     tags: [Skills]
+ *     description: Change userSkill status
+ *     parameters:
+ *       - name: verificationStatus
+ *         description: verification status
+ *         in: body
+ *         schema:
+ *           $ref: '#/definitions/Skill'
+ *
+ *     responses:
+ *       200:
+ *         description: updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/definitions/Skill'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#definitions/Error'
+ *
+ */
+
+skillRouter.put(
+  '/status/:id',
+  requireRoles([USER_ROLES.SUPER_ADMIN]),
+  validate(verificationStatusRule()),
+  skillController.changeUserSkillStatus
 );
 
 export { skillRouter };

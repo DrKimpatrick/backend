@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { logger } from '../../shared/winston';
+import { EducationHistory } from '../../models/interfaces/education.interface';
 
 /**
  * @function UserController
@@ -144,6 +145,38 @@ export class EducationController {
     } catch (e) {
       logger.info(e);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+    }
+  };
+
+  changeEducationStatus = async (
+    req: Request,
+    res: Response
+  ): Promise<Response<{ message: string; data: EducationHistory }>> => {
+    try {
+      const { id } = req.params;
+
+      const { verificationStatus } = req.body;
+
+      const educationModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
+
+      const updateEducation = await educationModel.findByIdAndUpdate(
+        { _id: id },
+        { $set: { verificationStatus } },
+        { new: true, runValidators: true }
+      );
+
+      if (!updateEducation) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'education not found' });
+      }
+
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ data: updateEducation, message: 'updated successfully' });
+    } catch (error) {
+      logger.info(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'unable to perform this action due to internal server error' });
     }
   };
 }

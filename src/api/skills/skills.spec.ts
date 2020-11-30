@@ -10,6 +10,7 @@ import {
   STATUS_CODES,
   USER_ROLES,
 } from '../../constants';
+import { addUser } from '../users/__mocks__';
 
 describe('Skills /skills', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -256,5 +257,54 @@ describe('Skills /skills', () => {
         expect(userSkill.level).toEqual(SKILL_LEVEL.INTERMEDIATE);
         done();
       });
+  });
+
+  describe('Change UserSkill status', () => {
+    let userSkillId: string;
+
+    beforeEach(async () => {
+      const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
+
+      token = newUser.toAuthJSON().token;
+
+      const skill = await skillModel.create({ skill: faker.name.title() });
+
+      const userSkill = await userSkillModel.create({ skill: skill.id, user: user.id });
+
+      userSkillId = userSkill._id;
+    });
+
+    it('should allow super admin to change status', async () => {
+      const res = await supertest(app)
+        .put(`/api/v1/skills/status/${userSkillId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: SKILL_VERIFICATION_STATUS.VERIFIED });
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('data');
+
+      expect(res.body).toHaveProperty('message');
+    });
+
+    it('should return validation error when verification status not provided', async () => {
+      const res = await supertest(app)
+        .put(`/api/v1/skills/status/${userSkillId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: '' });
+
+      expect(res.status).toEqual(STATUS_CODES.BAD_REQUEST);
+    });
+
+    it('should return error', async () => {
+      const res = await supertest(app)
+        .put('/api/v1/skills/status/5fbf7863e1f4e723fab1ab1f')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: SKILL_VERIFICATION_STATUS.VERIFIED });
+
+      expect(res.status).toEqual(STATUS_CODES.NOT_FOUND);
+
+      expect(res.body).toHaveProperty('message');
+    });
   });
 });

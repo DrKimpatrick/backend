@@ -1,7 +1,6 @@
 import supertest from 'supertest';
 import faker from 'faker';
 import { format } from 'date-fns';
-
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
 import {
@@ -11,6 +10,7 @@ import {
   STATUS_CODES,
   USER_ROLES,
 } from '../../constants';
+import { addUser } from '../users/__mocks__';
 
 describe('Education /education', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -183,5 +183,55 @@ describe('Education /education', () => {
         expect(user.educationHistory.length).toEqual(0);
         done();
       });
+  });
+
+  describe('Change Education Status', () => {
+    let educationId: string;
+    beforeEach(async () => {
+      const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
+
+      token = newUser.toAuthJSON().token;
+
+      const newEducation = await educationModel.create({
+        schoolName: faker.name.title(),
+        startDate: format(faker.date.past(1, new Date(2019, 0, 1)), 'yyyy-MM-dd'),
+        endDate: format(new Date(), 'yyyy-MM-dd'),
+      });
+
+      educationId = newEducation._id;
+    });
+
+    it('should allow admin to change education status', async () => {
+      const res = await supertest(app)
+        .put(`/api/v1/education/status/${educationId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: SKILL_VERIFICATION_STATUS.VERIFIED });
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('data');
+
+      expect(res.body).toHaveProperty('message');
+    });
+
+    it('should return validation error when verification status not provided', async () => {
+      const res = await supertest(app)
+        .put(`/api/v1/education/status/${educationId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: '' });
+
+      expect(res.status).toEqual(STATUS_CODES.BAD_REQUEST);
+    });
+
+    it('should return error when education not found', async () => {
+      const res = await supertest(app)
+        .put(`/api/v1/education/status/5fbf7863e1f4e723fab1ab1f`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ verificationStatus: SKILL_VERIFICATION_STATUS.VERIFIED });
+
+      expect(res.status).toEqual(STATUS_CODES.NOT_FOUND);
+
+      expect(res.body).toHaveProperty('message');
+    });
   });
 });

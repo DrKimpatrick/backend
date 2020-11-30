@@ -34,7 +34,7 @@ const educationHistorySchema = new Schema(
       type: [String],
     },
     verificationStatus: {
-      type: SKILL_VERIFICATION_STATUS,
+      type: String,
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
       enum: Object.values(SKILL_VERIFICATION_STATUS),
     },

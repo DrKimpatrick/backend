@@ -177,3 +177,12 @@ export const employmentHistoryRules = () => [
     })
     .optional(),
 ];
+
+export const verificationStatusRule = () => {
+  return [
+    body('verificationStatus').notEmpty().withMessage('status is required'),
+    body('verificationStatus')
+      .isIn(Object.values(SKILL_VERIFICATION_STATUS))
+      .withMessage('Status should be verified, unverified or inProgress'),
+  ];
+};

@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { validate } from '../../helpers/request-validation.helpers';
-import { employmentHistoryRules } from '../../helpers/user-profile-validation.helper';
+import {
+  employmentHistoryRules,
+  verificationStatusRule,
+} from '../../helpers/user-profile-validation.helper';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 import employmentController from './employment.controller';
@@ -169,6 +172,46 @@ employmentRouter.get(
   '/:id',
   requireRoles([USER_ROLES.TALENT]),
   employmentController.listSpecificEmploymentHistory
+);
+
+/**
+ * @swagger
+ * /api/v1/employment/status/{id}:
+ *   put:
+ *     summary: Update Employment History Status
+ *     tags: [Employment]
+ *     description: Update Employment History
+ *     parameters:
+ *       - name: verificationStatus
+ *         description: verificationStatus
+ *         in: body
+ *         schema:
+ *           $ref: '#definitions/EmploymentHistory'
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#definitions/EmploymentHistory'
+ *                 message:
+ *                   $ref: '#definitions/SuccessMessage'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+
+employmentRouter.put(
+  '/status/:id',
+  requireRoles([USER_ROLES.SUPER_ADMIN]),
+  validate(verificationStatusRule()),
+  employmentController.changeEmploymentStatus
 );
 
 export { employmentRouter };

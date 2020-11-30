@@ -23,8 +23,9 @@ const userSkillSchema = new Schema(
       default: SKILL_LEVEL.BEGINNER,
     },
     verificationStatus: {
-      type: SKILL_VERIFICATION_STATUS,
+      type: String,
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
+      enum: Object.values(SKILL_VERIFICATION_STATUS),
     },
   },
   { timestamps: true }

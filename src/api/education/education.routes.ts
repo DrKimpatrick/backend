@@ -2,6 +2,9 @@ import { Router } from 'express';
 import educationController from './education.controller';
 import { validate } from '../../helpers/request-validation.helpers';
 import { educationRules, educationUpdateRules } from '../../helpers/education-validation.helper';
+import { requireRoles } from '../../middleware/auth.middleware';
+import { USER_ROLES } from '../../constants';
+import { verificationStatusRule } from '../../helpers/user-profile-validation.helper';
 
 const educationRouter = Router();
 
@@ -176,5 +179,44 @@ educationRouter.delete('/:id', educationController.remove);
  *
  */
 educationRouter.patch('/:userId/:id', validate(educationUpdateRules()), educationController.update);
+
+/**
+ * @swagger
+ * /api/v1/education/status/{id}:
+ *   put:
+ *     summary: Change Education status
+ *     tags: [Education]
+ *     description: Change Education status
+ *     parameters:
+ *       - name: verificationStatus
+ *         description: verification status
+ *         in: body
+ *         schema:
+ *           $ref: '#/definitions/EducationHistory'
+ *
+ *     responses:
+ *       200:
+ *         description: updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/definitions/EducationHistory'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#definitions/Error'
+ *
+ */
+educationRouter.put(
+  '/status/:id',
+  requireRoles([USER_ROLES.SUPER_ADMIN]),
+  validate(verificationStatusRule()),
+  educationController.changeEducationStatus
+);
 
 export { educationRouter };

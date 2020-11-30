@@ -194,6 +194,35 @@ export class SkillsController {
       return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
     }
   };
+
+  changeUserSkillStatus = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { verificationStatus } = req.body;
+
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+
+      const changeStatus = await userSkillModel.findByIdAndUpdate(
+        { _id: id },
+        { $set: { verificationStatus } },
+        { new: true, runValidators: true }
+      );
+
+      if (!changeStatus) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'skill not found' });
+      }
+
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ data: changeStatus, message: 'updated successfully' });
+    } catch (error) {
+      logger.info(error);
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'unable to perform this action due to internal server error' });
+    }
+  };
 }
 
 const skillController = new SkillsController();

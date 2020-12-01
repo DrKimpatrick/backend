@@ -203,11 +203,15 @@ export class SkillsController {
 
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
-      const changeStatus = await userSkillModel.findByIdAndUpdate(
-        { _id: id },
-        { $set: { verificationStatus } },
-        { new: true, runValidators: true }
-      );
+      const changeStatus = await userSkillModel
+        .findByIdAndUpdate(
+          { _id: id },
+          { $set: { verificationStatus } },
+          { new: true, runValidators: true }
+        )
+        .populate('skill')
+        .select('-user')
+        .exec();
 
       if (!changeStatus) {
         return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'skill not found' });

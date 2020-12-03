@@ -22,6 +22,6 @@ describe(sendEmail, () => {
     };
     const message = await sendEmail(testEmail);
 
-    expect(message).toBe('Test Email Sent');
+    expect(message).toBe(undefined);
   });
 });

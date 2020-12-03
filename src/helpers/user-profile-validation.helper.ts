@@ -7,6 +7,7 @@ import {
   SKILL_LEVEL,
   SKILL_VERIFICATION_STATUS,
   USER_ROLES,
+  TalentProcess,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -115,6 +116,35 @@ export function userProfileRules() {
         SKILL_VERIFICATION_STATUS.IN_PROGRESS,
         SKILL_VERIFICATION_STATUS.VERIFIED,
       ]),
+
+    body('profileProcess').custom((val, { req }) => {
+      if (!val) {
+        return true;
+      }
+      if (req.currentUser && req.currentUser.roles && req.currentUser.roles.length > 0) {
+        const { roles } = req.currentUser;
+
+        for (let i = 0; i <= roles.length; i++) {
+          switch (roles[i]) {
+            case USER_ROLES.TALENT:
+              if (
+                req.currentUser.profileProcess &&
+                req.currentUser.profileProcess === TalentProcess.Completed
+              ) {
+                return Promise.reject('You have completed signup process');
+              }
+
+              if (!Object.values(TalentProcess).includes(val)) {
+                return Promise.reject(`The provided step (${val}) does not exist`);
+              }
+              return true;
+            default:
+              return Promise.reject('Failed to validate step');
+          }
+        }
+      }
+      return Promise.reject('Failed to validate step');
+    }),
   ];
 }
 

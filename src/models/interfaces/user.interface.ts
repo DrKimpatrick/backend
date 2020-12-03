@@ -21,4 +21,5 @@ export default interface IUser extends Document {
   name?: string;
   isSuperAdmin?: boolean;
   courses?: string[];
+  profileProcess?: string;
 }

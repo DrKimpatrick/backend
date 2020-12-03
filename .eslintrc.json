@@ -51,6 +51,6 @@
     "import/no-dynamic-require": "off",
     "global-require": "off",
     "no-restricted-syntax": "off",
-    "consistent-return": "off"
+    "no-plusplus": 0
   }
 }

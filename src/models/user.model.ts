@@ -95,6 +95,10 @@ const userSchema = new Schema(
         default: null,
       },
     ],
+    profileProcess: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

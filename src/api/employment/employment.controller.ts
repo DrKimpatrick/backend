@@ -17,6 +17,7 @@ export class EmploymentController {
   ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
     try {
       const id = req.currentUser?._id;
+      const employmentHistory = req.currentUser?.employmentHistory;
 
       const { isCurrentPosition, endDate } = req.body;
 
@@ -29,12 +30,20 @@ export class EmploymentController {
         endDate: isCurrentPosition && isCurrentPosition === true ? null : endDate,
       });
 
-      await userModel.updateOne({ _id: id }, { $push: { employmentHistory: newEmployment._id } });
+      if (employmentHistory) {
+        await userModel.updateOne({ _id: id }, { $push: { employmentHistory: newEmployment._id } });
+      } else {
+        await userModel.updateOne(
+          { _id: id },
+          { $set: { employmentHistory: [newEmployment._id] } }
+        );
+      }
 
       return res
         .status(STATUS_CODES.CREATED)
         .json({ message: 'employment added', data: newEmployment });
     } catch (error) {
+      console.log(error);
       logger.info(error);
       return res.status(STATUS_CODES.SERVER_ERROR).json({ error: 'Something went wrong.' });
     }

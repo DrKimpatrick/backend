@@ -31,10 +31,11 @@ export const sendEmail = async (email: Email) => {
   }
 
   try {
-    const response = await mailchimp.messages.send({
+    await mailchimp.messages.send({
       message,
     });
-    return response;
+
+    return;
   } catch (error) {
     logger.error(error);
   }

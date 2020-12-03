@@ -2,11 +2,12 @@ import supertest from 'supertest';
 import faker from 'faker';
 import { app } from '../../index';
 import { ModelFactory } from '../../models/model.factory';
-import { MODELS, SIGNUP_MODE, STATUS_CODES, USER_ROLES } from '../../constants';
+import { MODELS, SIGNUP_MODE, STATUS_CODES, USER_ROLES, TalentProcess } from '../../constants';
 import {
   correctUserProfileData,
   updateWrongEducationProfileData,
   updateWrongSkillsData,
+  addUser,
 } from './__mocks__';
 
 describe('User /users', () => {
@@ -39,19 +40,6 @@ describe('User /users', () => {
   });
 
   describe('PATCH /users/:id', () => {
-    it('should return an error when given wrong educationHistory', (done) => {
-      supertest(app)
-        .patch(`/api/v1/users/${user.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(updateWrongEducationProfileData)
-        .end((err, res) => {
-          expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
-          expect(res.body).toHaveProperty('errors');
-          expect(Array.isArray(res.body.errors)).toBeTruthy();
-          done();
-        });
-    });
-
     it('should return an error when given wrong skills values', (done) => {
       supertest(app)
         .patch(`/api/v1/users/${user.id}`)
@@ -137,7 +125,7 @@ describe('User /users', () => {
       supertest(app)
         .patch(`/api/v1/users/${user.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send(correctUserProfileData)
+        .send({ ...correctUserProfileData, employmentHistory: [], educationHistory: [] })
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.OK);
           expect(res.body).toHaveProperty('profile');
@@ -452,5 +440,39 @@ describe('User /users', () => {
         expect(res.body.profile).toHaveProperty('_id');
         done();
       });
+  });
+
+  describe('Profile Step', () => {
+    let newToken: string;
+
+    let newUserId: string;
+
+    beforeEach(async () => {
+      const newUser = await userM.create(addUser(USER_ROLES.TALENT));
+
+      newToken = newUser.toAuthJSON().token;
+
+      newUserId = newUser._id;
+    });
+
+    it('should change profile step', async () => {
+      const res = await supertest(app)
+        .patch(`/api/v1/users/${newUserId}`)
+        .set('Authorization', `Bearer ${newToken}`)
+        .send({ profileProcess: TalentProcess.CurrentRole });
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('profile');
+    });
+
+    it('should return error when failed to validate', async () => {
+      const res = await supertest(app)
+        .patch(`/api/v1/users/${newUserId}`)
+        .set('Authorization', `Bearer ${newToken}`)
+        .send({ profileProcess: 'unknown step' });
+
+      expect(res.status).toEqual(STATUS_CODES.BAD_REQUEST);
+    });
   });
 });

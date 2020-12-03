@@ -80,3 +80,15 @@ export enum COURSE_VERIFICATION_STATUS {
   PENDING = 'pending',
   DECLINED = 'declined',
 }
+
+export enum TalentProcess {
+  CurrentRole = 'currentRole',
+  SkillRanking = 'skillRanking',
+  RecentEmployer = 'recentEmployer',
+  AddEducation = 'addEducation',
+  Completed = 'completed',
+  SingleEducation = 'singleEducation',
+  ListEducation = 'listEducation',
+  SingleEmployment = 'singleEmployment',
+  ListEmployment = 'listEmployment',
+}

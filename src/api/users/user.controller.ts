@@ -115,7 +115,7 @@ export class UserController {
       }
 
       const { password, roles } = req.body;
-      let { employmentHistory, educationHistory, skills } = req.body;
+      let { skills } = req.body;
 
       if (password) delete req.body.password;
 
@@ -129,33 +129,13 @@ export class UserController {
         }
       }
 
-      // validate employmentHistory
-      if (employmentHistory) {
-        const empH = await this.editUserEmpEduHistory(MODELS.EMPLOYMENT_HISTORY, employmentHistory);
-        if (empH.error) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({ message: empH.error });
-        }
-        employmentHistory = empH.data;
-      }
-
-      // validate educationHistory
-      if (educationHistory) {
-        const eduH = await this.editUserEmpEduHistory(MODELS.EDUCATION_HISTORY, educationHistory);
-        if (eduH.error) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({ message: eduH.error });
-        }
-        educationHistory = eduH.data;
-      }
-
-      const setUpdate: any = { employmentHistory, educationHistory };
+      const setUpdate: any = {};
       if (roles) {
         setUpdate.roles = roles;
       }
 
       delete req.body?.roles;
       delete req.body?.role;
-      delete req.body?.employmentHistory;
-      delete req.body?.educationHistory;
       // should not update email
       delete req.body?.email;
       delete req.body?.skills;

@@ -5,6 +5,7 @@ import { skillRouter } from '../skills/skills.routes';
 import { educationRouter } from '../education/education.routes';
 import { employmentRouter } from '../employment/employment.routes';
 import { courseRouter } from '../course/course.routes';
+import { companyRouter } from '../company/company.routes';
 
 const v1Router = Router();
 
@@ -14,5 +15,6 @@ v1Router.use('/skills', skillRouter);
 v1Router.use('/education', educationRouter);
 v1Router.use('/employment', employmentRouter);
 v1Router.use('/courses', courseRouter);
+v1Router.use('/company', companyRouter);
 
 export { v1Router };

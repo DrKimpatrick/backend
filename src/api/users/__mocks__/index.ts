@@ -92,6 +92,17 @@ const addNewEmployment = (userId: string) => {
   };
 };
 
+const addNewCompanyOrSchool = () => {
+  return {
+    name: 'sky-tech',
+    address: 'Jack Dorsey',
+    website: 'sky-tech.com',
+    accountManagerName: 'name or title',
+    email: `new.company${Math.random()}@company.com`,
+    phone: '+250 788 903 119',
+  };
+};
+
 export {
   updateWrongEducationProfileData,
   updateWrongSkillsData,
@@ -99,4 +110,5 @@ export {
   addCourse,
   addUser,
   addNewEmployment,
+  addNewCompanyOrSchool,
 };

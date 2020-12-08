@@ -9,6 +9,7 @@ import {
   USER_ROLES,
   TalentProcess,
   Supervisor,
+  AdminsProcess,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -136,6 +137,21 @@ export function userProfileRules() {
               }
 
               if (!Object.values(TalentProcess).includes(val)) {
+                return Promise.reject(`The provided step (${val}) does not exist`);
+              }
+              return true;
+            case USER_ROLES.RECRUITMENT_ADMIN:
+            case USER_ROLES.HR_ADMIN:
+            case USER_ROLES.COMPANY_ADMIN:
+            case USER_ROLES.TRAINNING_ADMIN:
+              if (
+                req.currentUser.profileProcess &&
+                req.currentUser.profileProcess === AdminsProcess.Completed
+              ) {
+                return Promise.reject('You have completed signup process');
+              }
+
+              if (!Object.values(AdminsProcess).includes(val)) {
                 return Promise.reject(`The provided step (${val}) does not exist`);
               }
               return true;

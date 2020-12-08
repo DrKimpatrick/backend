@@ -48,6 +48,7 @@ export const MODELS = {
   EMPLOYMENT_HISTORY: 'employment-history',
   BETA_TESTER: 'beta-tester',
   COURSE: 'course',
+  COMPANY: 'company',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';
@@ -97,4 +98,12 @@ export enum Supervisor {
   Staffing = 'Staffing',
   Employee = 'Employee',
   Hr = 'HR',
+}
+
+export enum AdminsProcess {
+  AddCompany = 'AddCompany',
+  AddSchool = 'AddSchool',
+  AddPlan = 'AddPlan',
+  Payment = 'Payment',
+  Completed = 'Completed',
 }

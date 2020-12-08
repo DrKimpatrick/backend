@@ -99,6 +99,14 @@ const userSchema = new Schema(
       type: String,
       required: false,
     },
+    companies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: false,
+        default: null,
+      },
+    ],
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

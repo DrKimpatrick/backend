@@ -51,6 +51,15 @@
     "import/no-dynamic-require": "off",
     "global-require": "off",
     "no-restricted-syntax": "off",
-    "no-plusplus": 0
+    "no-plusplus": 0,
+    "consistent-return": "off",
+    "no-irregular-whitespace": [
+      "error",
+      {
+        "skipTemplates": true,
+        "skipRegExps": true,
+        "skipComments": true
+      }
+    ]
   }
 }

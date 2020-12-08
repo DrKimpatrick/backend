@@ -92,3 +92,9 @@ export enum TalentProcess {
   SingleEmployment = 'singleEmployment',
   ListEmployment = 'listEmployment',
 }
+
+export enum Supervisor {
+  Staffing = 'Staffing',
+  Employee = 'Employee',
+  Hr = 'HR',
+}

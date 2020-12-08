@@ -17,15 +17,34 @@ export class EmploymentController {
   ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
     try {
       const id = req.currentUser?._id;
+
       const employmentHistory = req.currentUser?.employmentHistory;
 
-      const { isCurrentPosition, endDate } = req.body;
+      const { isCurrentPosition, endDate, skillsUsed } = req.body;
 
       const userModel = ModelFactory.getModel(MODELS.USER);
+
       const employmentModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
 
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+
+      let skills = [];
+
+      if (skillsUsed && skillsUsed.length > 0) {
+        const find = await userSkillModel.find({
+          $and: [{ user: id }, { _id: { $in: skillsUsed } }],
+        });
+
+        if (!find || find.length <= 0) {
+          return res
+            .status(STATUS_CODES.NOT_FOUND)
+            .json({ message: 'the provided skills not found' });
+        }
+        skills = find.map((item) => item._id);
+      }
       const newEmployment: EmploymentHistory = await employmentModel.create({
         ...req.body,
+        skillsUsed: skills,
         userId: id,
         endDate: isCurrentPosition && isCurrentPosition === true ? null : endDate,
       });
@@ -43,9 +62,10 @@ export class EmploymentController {
         .status(STATUS_CODES.CREATED)
         .json({ message: 'employment added', data: newEmployment });
     } catch (error) {
-      console.log(error);
       logger.info(error);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ error: 'Something went wrong.' });
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'Unable to save data due to internal server error' });
     }
   };
 
@@ -62,12 +82,15 @@ export class EmploymentController {
         .find({
           userId: id,
         })
+        .populate('skillsUsed')
         .sort({ createdAt: -1 });
 
       return res.status(STATUS_CODES.OK).json({ data: getUserEmploymentHistory });
     } catch (error) {
       logger.info(error);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ error: 'something went wrong' });
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'Unable to fetch data due to internal server error' });
     }
   };
 
@@ -78,13 +101,16 @@ export class EmploymentController {
     try {
       const { id } = req.params;
 
+      const userId = req.currentUser?._id;
+
       let data: EmploymentHistory;
+
+      let skills = [];
 
       const {
         isCurrentPosition,
         endDate,
         verificationStatus,
-        skillsUsed,
         companyName,
         supervisor,
         title,
@@ -92,9 +118,12 @@ export class EmploymentController {
         accomplishments,
         startDate,
         favoriteProject,
+        skillsUsed,
       } = req.body;
 
       const employmentModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
+
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
       const checkForAdmin = req.currentUser?.roles?.find((item) => item === USER_ROLES.SUPER_ADMIN);
 
@@ -105,11 +134,22 @@ export class EmploymentController {
           { new: true, runValidators: true }
         );
       } else {
+        if (skillsUsed && Array.isArray(skillsUsed) && skillsUsed.length > 0) {
+          const find = await userSkillModel.find({
+            $and: [{ user: userId }, { _id: { $in: skillsUsed } }],
+          });
+
+          if (!find || find.length <= 0) {
+            return res
+              .status(STATUS_CODES.NOT_FOUND)
+              .json({ message: 'the provided skills not found' });
+          }
+          skills = find.map((item) => item._id);
+        }
         data = await employmentModel.findOneAndUpdate(
           { $and: [{ _id: id }, { userId: req.currentUser?._id }] },
           {
             $set: {
-              skillsUsed,
               companyName,
               supervisor,
               title,
@@ -119,6 +159,7 @@ export class EmploymentController {
               favoriteProject,
               isCurrentPosition,
               endDate: isCurrentPosition && isCurrentPosition === true ? null : endDate,
+              skillsUsed: skills,
             },
           },
           { new: true }
@@ -132,7 +173,7 @@ export class EmploymentController {
       logger.info(error);
       return res
         .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Unable to update data due to internal server error' });
+        .json({ message: 'Unable to update data due to internal server error' });
     }
   };
 
@@ -168,7 +209,7 @@ export class EmploymentController {
       logger.info(error);
       return res
         .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Unable to delete data due to internal server error' });
+        .json({ message: 'Unable to delete data due to internal server error' });
     }
   };
 
@@ -180,14 +221,18 @@ export class EmploymentController {
 
       const employmentModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
 
-      const getSpecificEmploymentHistory = await employmentModel.findOne({
-        $and: [{ userId, _id: id }],
-      });
+      const getSpecificEmploymentHistory = await employmentModel
+        .findOne({
+          $and: [{ userId, _id: id }],
+        })
+        .populate('skillsUsed');
 
       return res.status(STATUS_CODES.OK).json({ data: getSpecificEmploymentHistory });
     } catch (error) {
       logger.info(error);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ error: 'something went wrong' });
+      return res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: 'unable to fetch data due to internal server error' });
     }
   };
 

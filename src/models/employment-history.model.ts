@@ -10,7 +10,15 @@ const employmentHistorySchema = new Schema(
       required: [true, 'Company is required'],
     },
     supervisor: {
-      type: String,
+      name: {
+        type: String,
+        required: true,
+      },
+      detail: {
+        name: { type: String, required: true },
+        phoneNumber: { type: String, required: true },
+        email: { type: String, required: true },
+      },
     },
     title: {
       type: String,
@@ -23,9 +31,14 @@ const employmentHistorySchema = new Schema(
     endDate: {
       type: Date,
     },
-    skillsUsed: {
-      type: [String],
-    },
+    skillsUsed: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'UserSkill',
+        default: null,
+      },
+    ],
     responsibilities: {
       type: [String],
     },
@@ -52,6 +65,7 @@ const employmentHistorySchema = new Schema(
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   { timestamps: true }

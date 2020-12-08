@@ -1,4 +1,4 @@
-import { SIGNUP_MODE } from '../../../constants';
+import { SIGNUP_MODE, Supervisor } from '../../../constants';
 
 const updateWrongEducationProfileData = {
   educationHistory: ['5f86b1a4c9233d2444064617'],
@@ -72,11 +72,17 @@ const addUser = (role: string) => {
 const addNewEmployment = (userId: string) => {
   return {
     companyName: 'Twitter, Inc',
-    supervisor: 'Jack Dorsey',
+    supervisor: {
+      name: Supervisor.Employee,
+      detail: {
+        name: 'john',
+        email: 'john@gmail.com',
+        phoneNumber: '+25078000000',
+      },
+    },
     title: 'Chief Technical Officer',
     startDate: '2018-12-13',
     endDate: '2020-12-20',
-    skillsUsed: ['javascript'],
     responsibilities: ['responsibilities'],
     accomplishments: ['head Boy'],
     favoriteProject: 'Some Project',

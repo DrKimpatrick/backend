@@ -5,7 +5,14 @@ export interface EmploymentHistory extends Document {
   companyName: string;
   startDate: string;
   endDate?: string;
-  supervisor: string;
+  supervisor: {
+    name: string;
+    detail: {
+      name: string;
+      phoneNumber: string;
+      email: string;
+    };
+  };
   title: string;
   skillsUsed?: string[];
   responsibilities?: string[];

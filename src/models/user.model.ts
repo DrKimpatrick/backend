@@ -105,6 +105,14 @@ const userSchema = new Schema(
         ref: 'Company',
         required: false,
         default: null,
+      }
+    ],
+    schools: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: false,
+        default: null,
       },
     ],
   },

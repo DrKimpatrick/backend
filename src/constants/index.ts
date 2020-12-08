@@ -49,6 +49,7 @@ export const MODELS = {
   BETA_TESTER: 'beta-tester',
   COURSE: 'course',
   COMPANY: 'company',
+  SCHOOL: 'school',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';

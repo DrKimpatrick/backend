@@ -34,8 +34,13 @@ export async function createSkills(rawSkills: IUserSkill[], userId: string) {
   // attach skill to current user
   skills = skills.map((x) => ({ ...x, user: userId }));
 
-  await userSkillModel.create(skills);
-  return userSkillModel.find({ user: userId }).populate('skill').select('-user').exec();
+  try {
+    await userSkillModel.create(skills);
+    return userSkillModel.find({ user: userId }).populate('skill').select('-user').exec();
+  } catch (e) {
+    logger.error(e);
+    throw new Error('Failed to attach skills. User already has some of the skills provided');
+  }
 }
 
 /**

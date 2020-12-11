@@ -18,6 +18,7 @@ const environment = {
   mailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
   baseUrl: process.env.BASE_URL || '',
   apiPrefix: process.env.API_PREFIX || '/api/v1',
+  stripeApiKey: process.env.STRIPE_API_KEY || '',
 };
 
 if (environment.env === 'test') {

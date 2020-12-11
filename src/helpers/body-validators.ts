@@ -17,7 +17,7 @@ export const bodyArray = (message?: string) => (
 export const bodyNotArray = (message?: string) => (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   if (Array.isArray(req.body)) {
     return res
@@ -27,21 +27,13 @@ export const bodyNotArray = (message?: string) => (
   return next();
 };
 
-export const bodyArrayNotEmpty = () => (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const bodyArrayNotEmpty = () => (req: Request, res: Response, next: NextFunction) => {
   if (!Array.isArray(req.body)) {
-    return res
-      .status(STATUS_CODES.BAD_REQUEST)
-      .json({ message: 'Body should be an array' });
+    return res.status(STATUS_CODES.BAD_REQUEST).json({ message: 'Body should be an array' });
   }
 
   if (req.body.length === 0) {
-    return res
-      .status(STATUS_CODES.BAD_REQUEST)
-      .json({ message: 'Empty body: No data submitted.' });
+    return res.status(STATUS_CODES.BAD_REQUEST).json({ message: 'Empty body: No data submitted.' });
   }
 
   return next();

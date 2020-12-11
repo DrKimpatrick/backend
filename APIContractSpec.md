@@ -36,7 +36,7 @@
   {
     "user": {
       "role": "talent",
-      "featureChoice": "premium",
+      "subscription": "premium",
       "paymentStatus": "unpaid|failed|confirmed",
       "profileStatus": "draft|pusblished",
       "verified": boolean,

@@ -62,7 +62,7 @@ const userSchema = new Schema(
       default: false,
     },
     featureChoice: {
-      type: FEATURE_CHOICE,
+      type: String,
       default: FEATURE_CHOICE.BASIC,
       enum: Object.values(FEATURE_CHOICE),
     },
@@ -105,7 +105,7 @@ const userSchema = new Schema(
         ref: 'Company',
         required: false,
         default: null,
-      }
+      },
     ],
     schools: [
       {
@@ -115,6 +115,11 @@ const userSchema = new Schema(
         default: null,
       },
     ],
+    stripeSubscriptionId: {
+      type: String,
+      default: null,
+      required: false,
+    },
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

@@ -12,7 +12,7 @@ export const requireToken = (isTokenInBodyParams = false) => async (
   next: NextFunction
 ) => {
   const doNotRequireTokenUrls = new RegExp(
-    `^((${environment.apiPrefix}/auth.*)|(${environment.apiPrefix}/users/beta-testers))$`,
+    `^((${environment.apiPrefix}/auth.*)|(${environment.apiPrefix}/users/beta-testers)|(${environment.apiPrefix}/stripe/products))$`,
     'i'
   );
 

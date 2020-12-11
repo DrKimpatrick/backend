@@ -4,11 +4,11 @@ import authController from './auth.controller';
 import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
 import {
-  validate,
   registrationRules,
   passwordValidator,
   confirmPasswordValidator,
 } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 import { requireToken } from '../../middleware/auth.middleware';
 
 const authRouter = Router();

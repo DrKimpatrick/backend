@@ -240,8 +240,8 @@ export class SkillsController {
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 
       // START: make sure user only updates his skills
-      let userSkills = await userSkillModel
-        .deleteMany({ user: req.currentUser?.id, '_id': { $in: skills } })
+      const userSkills = await userSkillModel
+        .deleteMany({ user: req.currentUser?.id, _id: { $in: skills } })
         .exec();
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data: userSkills });

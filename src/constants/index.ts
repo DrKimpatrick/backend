@@ -108,3 +108,76 @@ export enum AdminsProcess {
   Payment = 'Payment',
   Completed = 'Completed',
 }
+
+export const PRODUCTS = {
+  talent: '',
+};
+
+export const PRODUCT_PLANS = [
+  {
+    name: 'Talent Basic',
+    features: [{ available: true, name: 'Unverified Resume Listing' }],
+  },
+  {
+    name: 'Talent Standard',
+    features: [
+      {
+        available: false,
+        name: 'Top Talent Listing',
+        detail:
+          'Employment verification- standard. International Employment Verification - charge a fee.',
+      },
+      {
+        available: true,
+        name: 'Employment Verification',
+        detail:
+          'Domestic Education verification- standard. International Education Verification - charge a fee.',
+      },
+      {
+        available: true,
+        name: 'Education Verification',
+        detail: 'Your education records will be pre verified expediting the hiring process.',
+      },
+      {
+        available: false,
+        name: '3 Skill Certification Vouchers',
+        detail: '3 each at 11% Vouchers for any tech talent skill certification test.',
+      },
+      {
+        available: true,
+        name: '15% off Certification & Training',
+        detail: '15% off all tech talent certifications & training.',
+      },
+    ],
+  },
+  {
+    name: 'Talent Premium',
+    features: [
+      {
+        available: true,
+        name: 'Top Talent Listing',
+        detail: 'Employers will see your profile  before standard & basic members.',
+      },
+      {
+        available: true,
+        name: 'Employment Verification',
+        detail: 'Your employment records will be pre verified expediting the hiring process.',
+      },
+      {
+        available: true,
+        name: 'Education Verification',
+        detail: 'Your education records will be pre verified expediting the hiring process.',
+      },
+      {
+        available: true,
+        name: '3 Skill Certification Vouchers',
+        detail: '3 Vouchers for any tech talent skill certification test.',
+      },
+      {
+        available: true,
+        name: '15% off Certification & Training',
+        detail: '15% off all tech talent certifications & training.',
+      },
+    ],
+  },
+];

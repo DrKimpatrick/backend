@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import skillController from './skills.controller';
-import { validate } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 import {
   skillsRules,
   skillsUpdateRules,
@@ -182,7 +182,7 @@ skillRouter.patch(
   '/me',
   bodyArray('A list of User skills is expected'),
   validate(userSkillsUpdateRules()),
-  skillController.updateUserSkills,
+  skillController.updateUserSkills
 );
 
 /**
@@ -217,7 +217,7 @@ skillRouter.delete(
   '/me',
   bodyArrayNotEmpty(),
   validate(userSkillsDeleteRules()),
-  skillController.deleteUserSkills,
+  skillController.deleteUserSkills
 );
 
 /**

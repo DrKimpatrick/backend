@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { validate } from '../../helpers/request-validation.helpers';
 import {
   employmentHistoryRules,
   verificationStatusRule,
 } from '../../helpers/user-profile-validation.helper';
+import { validate } from '../../middleware/request-validation.middleware';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 import employmentController from './employment.controller';

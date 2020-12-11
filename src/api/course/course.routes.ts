@@ -3,7 +3,7 @@ import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 import { courseValidator } from '../../helpers/user-profile-validation.helper';
 import courseController from './course.controller';
-import { validate } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 
 const courseRouter = express.Router();
 

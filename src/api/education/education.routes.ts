@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import educationController from './education.controller';
-import { validate } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 import { educationRules, educationUpdateRules } from '../../helpers/education-validation.helper';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';

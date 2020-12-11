@@ -1,30 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { body, ValidationChain, validationResult } from 'express-validator';
-import { MODELS, STATUS_CODES, USER_ROLES } from '../constants';
+import { body } from 'express-validator';
+import { MODELS, USER_ROLES } from '../constants';
 import IBetaTester from '../models/interfaces/beta-tester.interface';
 import { ModelFactory } from '../models/model.factory';
-
-/**
- * @function validate
- * @description middleware to validate passed rules
- * @param {any[]} validations - Validation rules
- * @return {object} errors
- */
-export function validate(validations: ValidationChain[]) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    await Promise.all(validations.map((validation) => validation.run(req)));
-
-    const errors = validationResult(req);
-    if (errors.isEmpty()) {
-      return next();
-    }
-
-    const extractedErrors: any = [];
-    errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
-
-    return res.status(STATUS_CODES.BAD_REQUEST).json({ errors: extractedErrors });
-  };
-}
 
 export function passwordValidator() {
   return [

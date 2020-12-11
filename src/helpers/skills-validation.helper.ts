@@ -28,7 +28,5 @@ export function userSkillsUpdateRules() {
 }
 
 export function userSkillsDeleteRules() {
-  return [
-    body('*', 'User Skill must be a valid ID').isMongoId(),
-  ];
+  return [body('*', 'User Skill must be a valid ID').isMongoId()];
 }

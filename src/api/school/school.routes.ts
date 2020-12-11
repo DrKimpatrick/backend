@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validate } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 import {
   companyAndSchoolRules as schoolRules,
   companyAndSchoolUpdateRules as schoolUpdateRules,

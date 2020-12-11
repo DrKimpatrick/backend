@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import userController from './user.controller';
 import { userProfileRules } from '../../helpers/user-profile-validation.helper';
-import { newBetaTesterRules, validate } from '../../helpers/request-validation.helpers';
+import { newBetaTesterRules } from '../../helpers/request-validation.helpers';
+import { validate } from '../../middleware/request-validation.middleware';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
 

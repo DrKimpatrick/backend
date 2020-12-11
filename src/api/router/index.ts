@@ -7,6 +7,7 @@ import { employmentRouter } from '../employment/employment.routes';
 import { courseRouter } from '../course/course.routes';
 import { companyRouter } from '../company/company.routes';
 import { schoolRouter } from '../school/school.routes';
+import { stripeRouter } from '../stripe/stripe.routes';
 
 const v1Router = Router();
 
@@ -18,5 +19,6 @@ v1Router.use('/employment', employmentRouter);
 v1Router.use('/courses', courseRouter);
 v1Router.use('/company', companyRouter);
 v1Router.use('/school', schoolRouter);
+v1Router.use('/stripe', stripeRouter);
 
 export { v1Router };

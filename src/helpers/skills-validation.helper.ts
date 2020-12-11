@@ -26,3 +26,9 @@ export function userSkillsUpdateRules() {
     body('*.verificationStatus').optional().isIn(Object.values(SKILL_VERIFICATION_STATUS)),
   ];
 }
+
+export function userSkillsDeleteRules() {
+  return [
+    body('*', 'User Skill must be a valid ID').isMongoId(),
+  ];
+}

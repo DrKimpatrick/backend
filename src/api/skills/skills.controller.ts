@@ -232,6 +232,24 @@ export class SkillsController {
         .json({ message: 'unable to perform this action due to internal server error' });
     }
   };
+
+  deleteUserSkills = async (req: Request, res: Response) => {
+    try {
+      const skills = req.body || [];
+
+      const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+
+      // START: make sure user only updates his skills
+      let userSkills = await userSkillModel
+        .deleteMany({ user: req.currentUser?.id, '_id': { $in: skills } })
+        .exec();
+
+      return res.status(STATUS_CODES.NO_CONTENT).json({ data: userSkills });
+    } catch (e) {
+      logger.error(e);
+      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+    }
+  };
 }
 
 const skillController = new SkillsController();

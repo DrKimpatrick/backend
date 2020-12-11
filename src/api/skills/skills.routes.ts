@@ -4,12 +4,13 @@ import { validate } from '../../helpers/request-validation.helpers';
 import {
   skillsRules,
   skillsUpdateRules,
+  userSkillsDeleteRules,
   userSkillsRules,
   userSkillsUpdateRules,
 } from '../../helpers/skills-validation.helper';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
-import { bodyArray, bodyNotArray } from '../../helpers/body-validators';
+import { bodyArray, bodyArrayNotEmpty, bodyNotArray } from '../../helpers/body-validators';
 import { verificationStatusRule } from '../../helpers/user-profile-validation.helper';
 
 const adminRoles = [USER_ROLES.SUPER_ADMIN];
@@ -181,7 +182,42 @@ skillRouter.patch(
   '/me',
   bodyArray('A list of User skills is expected'),
   validate(userSkillsUpdateRules()),
-  skillController.updateUserSkills
+  skillController.updateUserSkills,
+);
+
+/**
+ * @swagger
+ * /api/v1/skills/me:
+ *   delete:
+ *     summary: Delete User Skills
+ *     tags: [Skills]
+ *     description: Delete User Skills
+ *     parameters:
+ *       - name: skills
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: Id of User SKill
+ *
+ *     responses:
+ *       204:
+ *         description: Successfully deleted skills
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ */
+skillRouter.delete(
+  '/me',
+  bodyArrayNotEmpty(),
+  validate(userSkillsDeleteRules()),
+  skillController.deleteUserSkills,
 );
 
 /**

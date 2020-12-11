@@ -259,6 +259,46 @@ describe('Skills /skills', () => {
       });
   });
 
+  it('should Fail to Delete a User Skill if invalid data in body', async (done) => {
+    const skill = await skillModel.create({ skill: faker.name.title() });
+    let userSkill = await userSkillModel.create({ skill: skill.id, user: user.id });
+
+    expect(userSkill.verificationStatus).toEqual(SKILL_VERIFICATION_STATUS.UNVERIFIED);
+    expect(userSkill.level).toEqual(SKILL_LEVEL.BEGINNER);
+
+    supertest(app)
+      .del(`/api/v1/skills/me`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ userSkill: userSkill.id.toString() }])
+      .end(async (err, res) => {
+        expect(res.status).toBe(STATUS_CODES.BAD_REQUEST);
+        expect(res.body).toHaveProperty('errors');
+        expect(Array.isArray(res.body.errors)).toBeTruthy();
+        expect(res.body.errors[0]['[0]']).toEqual('User Skill must be a valid ID');
+        done();
+      });
+  });
+
+  it('should Delete a User Skill Successfully', async (done) => {
+    const skill = await skillModel.create({ skill: faker.name.title() });
+    let userSkill = await userSkillModel.create({ skill: skill.id, user: user.id });
+
+    expect(userSkill.verificationStatus).toEqual(SKILL_VERIFICATION_STATUS.UNVERIFIED);
+    expect(userSkill.level).toEqual(SKILL_LEVEL.BEGINNER);
+
+    supertest(app)
+      .del(`/api/v1/skills/me`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([userSkill.id.toString()])
+      .end(async (err, res) => {
+        expect(res.status).toBe(STATUS_CODES.NO_CONTENT);
+
+        userSkill = await userSkillModel.findOne({ skill: skill.id, user: user.id });
+        expect(userSkill).toBeNull();
+        done();
+      });
+  });
+
   describe('Change UserSkill status', () => {
     let userSkillId: string;
 

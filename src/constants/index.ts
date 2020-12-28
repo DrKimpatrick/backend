@@ -181,3 +181,15 @@ export const PRODUCT_PLANS = [
     ],
   },
 ];
+
+export enum EmploymentType {
+  Contract = 'Contract',
+  FullTime = 'FullTime',
+  PartTime = 'PartTime',
+}
+
+export enum EmploymentReference {
+  CoWorker = 'Coworker',
+  SuperVisor = 'Supervisor',
+  HR = 'HR',
+}

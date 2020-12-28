@@ -38,6 +38,14 @@ const educationHistorySchema = new Schema(
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
       enum: Object.values(SKILL_VERIFICATION_STATUS),
     },
+    schoolWebsite: {
+      type: String,
+      required: false,
+    },
+    certificateType: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: true }
 );

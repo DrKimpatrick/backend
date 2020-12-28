@@ -5,7 +5,7 @@ export interface EmploymentHistory extends Document {
   companyName: string;
   startDate: string;
   endDate?: string;
-  supervisor: {
+  supervisor?: {
     name: string;
     detail: {
       name: string;
@@ -20,4 +20,13 @@ export interface EmploymentHistory extends Document {
   favoriteProject?: string;
   verificationStatus?: SKILL_VERIFICATION_STATUS;
   userId?: Schema.Types.ObjectId;
+  reference?: {
+    name: string;
+    detail: {
+      name: string;
+      phoneNumber: string;
+      email: string;
+    };
+  };
+  employmentType: string;
 }

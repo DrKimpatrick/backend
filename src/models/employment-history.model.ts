@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { SKILL_VERIFICATION_STATUS } from '../constants';
+import { SKILL_VERIFICATION_STATUS, EmploymentType } from '../constants';
 
 const { Schema } = mongoose;
 
@@ -12,12 +12,12 @@ const employmentHistorySchema = new Schema(
     supervisor: {
       name: {
         type: String,
-        required: true,
+        required: false,
       },
       detail: {
-        name: { type: String, required: true },
-        phoneNumber: { type: String, required: true },
-        email: { type: String, required: true },
+        name: { type: String },
+        phoneNumber: { type: String },
+        email: { type: String },
       },
     },
     title: {
@@ -51,11 +51,7 @@ const employmentHistorySchema = new Schema(
     verificationStatus: {
       type: String,
       default: SKILL_VERIFICATION_STATUS.UNVERIFIED,
-      enum: [
-        SKILL_VERIFICATION_STATUS.IN_PROGRESS,
-        SKILL_VERIFICATION_STATUS.VERIFIED,
-        SKILL_VERIFICATION_STATUS.UNVERIFIED,
-      ],
+      enum: Object.values(SKILL_VERIFICATION_STATUS),
       required: true,
     },
     isCurrentPosition: {
@@ -66,6 +62,22 @@ const employmentHistorySchema = new Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+    },
+    reference: {
+      name: {
+        type: String,
+        required: false,
+      },
+      detail: {
+        name: { type: String },
+        phoneNumber: { type: String },
+        email: { type: String },
+      },
+    },
+    employmentType: {
+      type: String,
+      required: true,
+      enum: Object.values(EmploymentType),
     },
   },
   { timestamps: true }

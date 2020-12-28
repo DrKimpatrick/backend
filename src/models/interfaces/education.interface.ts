@@ -11,4 +11,6 @@ export interface EducationHistory extends Document {
   isCurrentEducation: boolean;
   accomplishments: string[];
   verificationStatus: SKILL_VERIFICATION_STATUS;
+  schoolWebsite?: string;
+  certificateType?: string;
 }

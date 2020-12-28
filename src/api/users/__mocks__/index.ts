@@ -1,4 +1,4 @@
-import { SIGNUP_MODE, Supervisor } from '../../../constants';
+import { SIGNUP_MODE, Supervisor, EmploymentType } from '../../../constants';
 
 const updateWrongEducationProfileData = {
   educationHistory: ['5f86b1a4c9233d2444064617'],
@@ -77,7 +77,7 @@ const addNewEmployment = (userId: string) => {
       detail: {
         name: 'john',
         email: 'john@gmail.com',
-        phoneNumber: '+25078000000',
+        phoneNumber: '+250786601256',
       },
     },
     title: 'Chief Technical Officer',
@@ -88,6 +88,7 @@ const addNewEmployment = (userId: string) => {
     favoriteProject: 'Some Project',
     verificationStatus: 'verified',
     isCurrentPosition: false,
+    employmentType: EmploymentType.FullTime,
     userId,
   };
 };

@@ -1,8 +1,6 @@
 import { Router } from 'express';
-import {
-  employmentHistoryRules,
-  verificationStatusRule,
-} from '../../helpers/user-profile-validation.helper';
+import { verificationStatusRule } from '../../helpers/user-profile-validation.helper';
+import { employmentHistoryRules } from '../../helpers/employment-validation.helper';
 import { validate } from '../../middleware/request-validation.middleware';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';

@@ -119,6 +119,8 @@ export class EmploymentController {
         startDate,
         favoriteProject,
         skillsUsed,
+        reference,
+        employmentType,
       } = req.body;
 
       const employmentModel = ModelFactory.getModel(MODELS.EMPLOYMENT_HISTORY);
@@ -160,6 +162,8 @@ export class EmploymentController {
               isCurrentPosition,
               endDate: isCurrentPosition && isCurrentPosition === true ? null : endDate,
               skillsUsed: skills,
+              reference,
+              employmentType,
             },
           },
           { new: true }

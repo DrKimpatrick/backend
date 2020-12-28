@@ -1,6 +1,5 @@
 import { body } from 'express-validator';
 import validator from 'validator';
-import { isValid, isAfter } from 'date-fns';
 import {
   FEATURE_CHOICE,
   PAYMENT_STATUS,
@@ -8,7 +7,6 @@ import {
   SKILL_VERIFICATION_STATUS,
   USER_ROLES,
   TalentProcess,
-  Supervisor,
   AdminsProcess,
 } from '../constants';
 
@@ -178,86 +176,6 @@ export const courseValidator = () => [
   body('existingCourseLink', 'Course link must be valid link').matches(
     /(^http[s]?:\/{2})|(^www)|(^\/{1,2})$/
   ),
-];
-
-export const employmentHistoryRules = () => [
-  body('companyName').notEmpty().trim().escape().withMessage('company name is required'),
-  body('title').not().isEmpty().trim().escape().withMessage('title is required'),
-  body('title').isLength({ min: 3 }).withMessage('title must be more than 3 characters'),
-  body('startDate').not().isEmpty().withMessage('start date is required'),
-  body('startDate').isISO8601().toDate().withMessage('start date must be valid'),
-  body('companyName').isString().withMessage('company name should be string'),
-  body('supervisor').custom((val) => {
-    if (val && typeof val === 'object' && Object.keys(val).length > 0) {
-      return true;
-    }
-    return Promise.reject('supervisor should contain name and detail');
-  }),
-  body('supervisor.name').notEmpty().withMessage('supervisor is required'),
-  body('supervisor.name')
-    .isIn(Object.values(Supervisor))
-    .withMessage('name should either be staffing, employee or HR'),
-  body('supervisor.detail').custom((val) => {
-    if (val && typeof val === 'object' && Object.keys(val).length > 0) {
-      return true;
-    }
-    return Promise.reject('detail should contain name, email and phone number');
-  }),
-  body('supervisor.detail.name').notEmpty().withMessage('name is required'),
-  body('supervisor.detail.email').notEmpty().withMessage('email is required'),
-  body('supervisor.detail.email').isEmail().withMessage('email is must be valid'),
-  body('supervisor.detail.phoneNumber').notEmpty().withMessage('phone number is required'),
-  body('title').isString().withMessage('title should be string'),
-  body('skillsUsed')
-    .custom((val) => {
-      if (!val) {
-        return true;
-      }
-
-      if (validateArrayOfStrings(val)) {
-        return true;
-      }
-      return Promise.reject('skills should contain list of data');
-    })
-    .optional(),
-  body('endDate').custom((val, { req }) => {
-    if (!req.body.isCurrentPosition || req.body.isCurrentPosition === false) {
-      const validateDate = isValid(new Date(val));
-
-      if (!validateDate) {
-        return Promise.reject('end date must be valid');
-      }
-
-      if (validateDate && !isAfter(new Date(val), new Date(req.body.startDate))) {
-        return Promise.reject('end date must be greater than start date');
-      }
-    }
-    return true;
-  }),
-  body('responsibilities')
-    .optional()
-    .custom((val) => {
-      if (!val) {
-        return true;
-      }
-
-      if (validateArrayOfStrings(val)) {
-        return true;
-      }
-      return Promise.reject('responsibilities should be array of strings');
-    }),
-  body('accomplishments')
-    .custom((val) => {
-      if (!val) {
-        return true;
-      }
-
-      if (validateArrayOfStrings(val)) {
-        return true;
-      }
-      return Promise.reject('accomplishment should be array of strings');
-    })
-    .optional(),
 ];
 
 export const verificationStatusRule = () => {

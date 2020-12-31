@@ -120,6 +120,14 @@ const userSchema = new Schema(
       default: null,
       required: false,
     },
+    bio: {
+      type: String,
+      required: false,
+    },
+    profilePicture: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

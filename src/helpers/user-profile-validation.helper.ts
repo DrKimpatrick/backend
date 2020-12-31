@@ -160,6 +160,18 @@ export function userProfileRules() {
       }
       return Promise.reject('Failed to validate step');
     }),
+    body('profilePicture')
+      .custom((val) => {
+        if (
+          typeof val !== 'string' ||
+          validator.isEmpty(val, { ignore_whitespace: true }) ||
+          !validator.isURL(val)
+        ) {
+          return Promise.reject('profile picture must be valid');
+        }
+        return true;
+      })
+      .optional(),
   ];
 }
 

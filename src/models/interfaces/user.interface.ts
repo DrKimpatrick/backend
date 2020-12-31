@@ -26,3 +26,11 @@ export default interface IUser extends Document {
   bio?: string;
   profilePicture?: string;
 }
+
+export interface IUserCoupon extends Document {
+  coupon: string;
+  issuer: string;
+  createdAt?: string;
+  modifiedAt?: string;
+  usedBy?: string[];
+}

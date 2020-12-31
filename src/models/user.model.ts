@@ -71,6 +71,11 @@ const userSchema = new Schema(
       default: PAYMENT_STATUS.UNPAID,
       enum: Object.values(PAYMENT_STATUS),
     },
+    couponUsed: {
+      type: String,
+      default: null,
+      required: false,
+    },
     employmentHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,

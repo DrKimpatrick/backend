@@ -50,6 +50,7 @@ export const MODELS = {
   COURSE: 'course',
   COMPANY: 'company',
   SCHOOL: 'school',
+  USER_COUPON: 'user-coupon',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';
@@ -192,4 +193,9 @@ export enum EmploymentReference {
   CoWorker = 'Coworker',
   SuperVisor = 'Supervisor',
   HR = 'HR',
+}
+
+export enum SUBSIDY_INTERVAL {
+  MONTH = 'month',
+  YEAR = 'year',
 }

@@ -2,20 +2,25 @@ import supertest from 'supertest';
 import faker from 'faker';
 import { Stripe } from 'stripe';
 import { app } from '../../index';
-import { STATUS_CODES, SIGNUP_MODE, MODELS, FEATURE_CHOICE, USER_ROLES } from '../../constants';
+import {
+  AdminsProcess,
+  FEATURE_CHOICE,
+  MODELS,
+  SIGNUP_MODE,
+  STATUS_CODES,
+  TalentProcess,
+  USER_ROLES,
+} from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 
 describe('Stripe /stripe', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
+  const userCouponM = ModelFactory.getModel(MODELS.USER_COUPON);
   let token: string;
   let user: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  afterEach(async () => {
-    await userM.deleteMany({});
   });
 
   it('should return products to all users', (done) => {
@@ -68,11 +73,14 @@ describe('Stripe /stripe', () => {
       });
   });
 
-  it('should create a stripe subscription', async (done) => {
+  it('should create a stripe subscription for Talent', async (done) => {
     const customersMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
     const subscriptionsMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
+    const customersListMock = jest.fn().mockResolvedValue({ data: [] });
+
     Stripe.prototype.customers = {
       create: customersMock,
+      list: customersListMock,
     } as any;
     Stripe.prototype.subscriptions = {
       create: subscriptionsMock,
@@ -97,6 +105,7 @@ describe('Stripe /stripe', () => {
         planId: faker.random.uuid(),
       },
       featureChoice: FEATURE_CHOICE.STANDARD,
+      profileProcess: TalentProcess.Completed,
     };
 
     supertest(app)
@@ -107,6 +116,120 @@ describe('Stripe /stripe', () => {
         expect(res.status).toBe(STATUS_CODES.CREATED);
         expect(customersMock).toHaveBeenCalledTimes(1);
         expect(subscriptionsMock).toHaveBeenCalledTimes(1);
+        done();
+      });
+  });
+
+  it('should create a stripe subscription for Admin', async (done) => {
+    const customersMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
+    const subscriptionsMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
+    const customersListMock = jest.fn().mockResolvedValue({ data: [{ id: faker.random.uuid() }] });
+
+    const planId = faker.random.uuid();
+
+    const productMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
+    const planMock = jest.fn().mockResolvedValue({
+      id: planId,
+      currency: 'usd',
+      product: faker.random.uuid(),
+    });
+    const couponMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
+
+    Stripe.prototype.products = { list: productMock } as any;
+    Stripe.prototype.plans = { retrieve: planMock } as any;
+    Stripe.prototype.coupons = { create: couponMock } as any;
+    Stripe.prototype.customers = { create: customersMock, list: customersListMock } as any;
+    Stripe.prototype.subscriptions = { create: subscriptionsMock } as any;
+
+    user = await userM.create({
+      signupMode: SIGNUP_MODE.LOCAL,
+      firstName: faker.name.firstName(),
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      verified: true,
+      password: faker.internet.password(),
+      roles: [USER_ROLES.HR_ADMIN],
+    });
+
+    token = user.toAuthJSON().token;
+    const subscription = {
+      paymentMethodId: faker.random.uuid(),
+      customerInfo: {
+        email: faker.internet.email(),
+        name: `${faker.name.firstName()} ${faker.name.lastName()}`,
+        planId,
+      },
+      subsidy: {
+        quantity: 40,
+        planId,
+        tier: {
+          unit_amount: 5000,
+        },
+      },
+      profileProcess: AdminsProcess.Completed,
+    };
+
+    supertest(app)
+      .post('/api/v1/stripe/subscription')
+      .set('Authorization', `Bearer ${token}`)
+      .send(subscription)
+      .end(async (err, res) => {
+        expect(res.status).toBe(STATUS_CODES.CREATED);
+        expect(res.body).toHaveProperty('coupon');
+
+        expect(customersMock).toHaveBeenCalledTimes(0);
+        expect(customersListMock).toHaveBeenCalledTimes(1);
+        expect(subscriptionsMock).toHaveBeenCalledTimes(1);
+        expect(couponMock).toHaveBeenCalledTimes(1);
+        expect(planMock).toHaveBeenCalledTimes(1);
+
+        const userCoupon = await userCouponM
+          .find({
+            coupon: res.body.coupon.id,
+            issuer: user.id,
+          })
+          .exec();
+
+        expect(userCoupon).not.toBeNull();
+        expect(Array.isArray(userCoupon)).toBeTruthy();
+        expect(userCoupon).toHaveLength(1);
+
+        done();
+      });
+  });
+
+  it('should return coupons created by the admin', async (done) => {
+    user = await userM.create({
+      signupMode: SIGNUP_MODE.LOCAL,
+      firstName: faker.name.firstName(),
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      verified: true,
+      password: faker.internet.password(),
+      roles: [USER_ROLES.HR_ADMIN],
+    });
+    user = user.toAuthJSON();
+    token = user.token;
+
+    const couponMock = {
+      coupon: faker.random.alphaNumeric(8),
+      issuer: user.profile._id,
+    };
+    const useCoupon = await userCouponM.create(couponMock);
+
+    supertest(app)
+      .get('/api/v1/stripe/coupons/issued')
+      .set('Authorization', `Bearer ${token}`)
+      .end((err, res) => {
+        expect(res.status).toBe(STATUS_CODES.OK);
+        expect(res.body).toHaveProperty('coupons');
+        expect(Array.isArray(res.body.coupons)).toBeTruthy();
+        expect(res.body.coupons).toHaveLength(1);
+        expect(res.body.coupons[0]._id).toBe(useCoupon._id.toString());
+        expect(res.body.coupons[0].issuer._id).toBe(user.profile._id.toString());
+        expect(Array.isArray(res.body.coupons[0].usedBy)).toBeTruthy();
+        expect(res.body.coupons[0].usedBy).toHaveLength(0);
+
         done();
       });
   });

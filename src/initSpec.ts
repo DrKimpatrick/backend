@@ -17,6 +17,7 @@ const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
 const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
 const courseModel = ModelFactory.getModel(MODELS.COURSE);
 const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+const userCouponM = ModelFactory.getModel(MODELS.USER_COUPON);
 
 const clearDb = async () => {
   await userM.deleteMany({});
@@ -27,6 +28,7 @@ const clearDb = async () => {
   await betaTesterModel.deleteMany({});
   await courseModel.deleteMany({});
   await userSkillsModel.deleteMany({});
+  await userCouponM.deleteMany({});
 };
 
 global.beforeEach(async () => {

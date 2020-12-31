@@ -89,9 +89,7 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain(
-                'http://localhost:3000/dashboard/auth/verify?data='
-              );
+              expect(res.header.location).toContain(process.env.SOCIAL_AUTH_REDIRECT_URL);
               done();
             });
         });
@@ -115,9 +113,7 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain(
-                'http://localhost:3000/dashboard/auth/verify?data='
-              );
+              expect(res.header.location).toContain(process.env.SOCIAL_AUTH_REDIRECT_URL);
               done();
             });
         });
@@ -141,9 +137,7 @@ describe('Auth /auth', () => {
             .set('Accept', 'application/json')
             .end((err, res) => {
               expect(res.status).toBe(302);
-              expect(res.header.location).toContain(
-                'http://localhost:3000/dashboard/auth/verify?data='
-              );
+              expect(res.header.location).toContain(process.env.SOCIAL_AUTH_REDIRECT_URL);
               done();
             });
         });

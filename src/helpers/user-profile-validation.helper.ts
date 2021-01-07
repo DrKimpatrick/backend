@@ -142,6 +142,7 @@ export function userProfileRules() {
             case USER_ROLES.HR_ADMIN:
             case USER_ROLES.COMPANY_ADMIN:
             case USER_ROLES.TRAINNING_ADMIN:
+            case USER_ROLES.EDUCATION:
               if (
                 req.currentUser.profileProcess &&
                 req.currentUser.profileProcess === AdminsProcess.Completed

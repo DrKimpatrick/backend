@@ -76,7 +76,7 @@ const schoolRouter = Router();
  */
 schoolRouter.post(
   '/',
-  requireRoles([USER_ROLES.TRAINNING_ADMIN], false),
+  requireRoles([USER_ROLES.TRAINNING_ADMIN, USER_ROLES.EDUCATION], false),
   validate(schoolRules()),
   schoolController.create
 );

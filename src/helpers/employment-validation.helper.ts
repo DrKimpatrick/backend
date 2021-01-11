@@ -4,6 +4,8 @@ import { isValid, isAfter } from 'date-fns';
 import { Supervisor, EmploymentReference, EmploymentType } from '../constants';
 import { validateArrayOfStrings } from './user-profile-validation.helper';
 
+const regInternationalPhone = /^\+(?:[0-9] ?){6,14}[0-​9]$/;
+
 export const employmentHistoryRules = () => [
   body('companyName').notEmpty().trim().escape().withMessage('company name is required'),
   body('title').not().isEmpty().trim().escape().withMessage('title is required'),
@@ -43,9 +45,9 @@ export const employmentHistoryRules = () => [
 
         if (
           validator.isEmpty(val.detail.phoneNumber, { ignore_whitespace: true }) ||
-          !validator.isMobilePhone(val.detail.phoneNumber, 'any', { strictMode: true })
+          !validator.matches(val.detail.phoneNumber, regInternationalPhone)
         ) {
-          return Promise.reject('supervisor detail (phone number) must be valid');
+          return Promise.reject('supervisor detail (phone) must be valid. Ex: +14155552671');
         }
         return true;
       }
@@ -144,9 +146,9 @@ export const employmentHistoryRules = () => [
 
         if (
           validator.isEmpty(val.detail.phoneNumber, { ignore_whitespace: true }) ||
-          !validator.isMobilePhone(val.detail.phoneNumber, 'any', { strictMode: true })
+          !validator.matches(val.detail.phoneNumber, regInternationalPhone)
         ) {
-          return Promise.reject('reference detail (phone number) must be valid');
+          return Promise.reject('reference detail (phone) must be valid. Ex: +14155552671');
         }
         return true;
       }

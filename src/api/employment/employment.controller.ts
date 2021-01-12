@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { logger } from '../../shared/winston';
 import { EmploymentHistory } from '../../models/interfaces/employment.interface';
+import { HttpError } from '../../helpers/error.helpers';
 
 /**
  * @function EmploymentController
@@ -11,10 +12,7 @@ import { EmploymentHistory } from '../../models/interfaces/employment.interface'
  */
 
 export class EmploymentController {
-  addEmploymentHistory = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
+  addEmploymentHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.currentUser?._id;
 
@@ -36,9 +34,7 @@ export class EmploymentController {
         });
 
         if (!find || find.length <= 0) {
-          return res
-            .status(STATUS_CODES.NOT_FOUND)
-            .json({ message: 'the provided skills not found' });
+          return next(new HttpError(STATUS_CODES.NOT_FOUND, 'the provided skills not found'));
         }
         skills = find.map((item) => item._id);
       }
@@ -62,17 +58,17 @@ export class EmploymentController {
         .status(STATUS_CODES.CREATED)
         .json({ message: 'employment added', data: newEmployment });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to save data due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to save data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  listEmploymentHistory = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ data: EmploymentHistory[] }>> => {
+  listEmploymentHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.currentUser?._id;
 
@@ -87,17 +83,17 @@ export class EmploymentController {
 
       return res.status(STATUS_CODES.OK).json({ data: getUserEmploymentHistory });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to fetch data due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  updateEmploymentHistory = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
+  updateEmploymentHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -142,9 +138,7 @@ export class EmploymentController {
           });
 
           if (!find || find.length <= 0) {
-            return res
-              .status(STATUS_CODES.NOT_FOUND)
-              .json({ message: 'the provided skills not found' });
+            return next(new HttpError(STATUS_CODES.NOT_FOUND, 'the provided skills not found'));
           }
           skills = find.map((item) => item._id);
         }
@@ -174,17 +168,17 @@ export class EmploymentController {
         .status(STATUS_CODES.OK)
         .json({ data, message: data ? 'updated successfully' : 'failed to update. no data' });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to update data due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to update data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  deleteEmploymentHistory = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string }>> => {
+  deleteEmploymentHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -210,14 +204,17 @@ export class EmploymentController {
         .status(STATUS_CODES.OK)
         .json({ message: data ? 'deleted successfully' : 'failed to delete data' });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to delete data due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to delete data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  listSpecificEmploymentHistory = async (req: Request, res: Response) => {
+  listSpecificEmploymentHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -233,17 +230,17 @@ export class EmploymentController {
 
       return res.status(STATUS_CODES.OK).json({ data: getSpecificEmploymentHistory });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'unable to fetch data due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  changeEmploymentStatus = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: EmploymentHistory }>> => {
+  changeEmploymentStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -265,10 +262,13 @@ export class EmploymentController {
         .status(STATUS_CODES.OK)
         .json({ data: updateEmployment, message: 'updated successfully' });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'unable to perform this action due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to update data due to internal server error',
+          error
+        )
+      );
     }
   };
 }

@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { logger } from '../../shared/winston';
+import { HttpError } from '../../helpers/error.helpers';
 
 export class CompanyController {
-  create = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.currentUser?.id;
 
@@ -27,8 +28,13 @@ export class CompanyController {
         .status(STATUS_CODES.CREATED)
         .json({ message: 'company added successfully', data: newCompany });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not create company due to internal server error',
+          e
+        )
+      );
     }
   };
 
@@ -45,17 +51,16 @@ export class CompanyController {
     }
   };
 
-  getOne = async (req: Request, res: Response) => {
+  getOne = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const company = await this.companyById(req.params.id);
       return res.status(STATUS_CODES.OK).json({ data: company });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(new HttpError(STATUS_CODES.BAD_REQUEST, e.message, e));
     }
   };
 
-  update = async (req: Request, res: Response) => {
+  update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const company = await this.companyById(req.params.id);
       const userId = req.currentUser?.id;
@@ -76,20 +81,19 @@ export class CompanyController {
 
       return res.status(STATUS_CODES.OK).json({ data: updatedCompany });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(new HttpError(STATUS_CODES.BAD_REQUEST, e.message, e));
     }
   };
 
-  remove = async (req: Request, res: Response) => {
+  remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const company = await this.companyById(req.params.id);
       const userId = req.currentUser?.id;
 
       if (company.userId.toString() !== userId?.toString() && !req.currentUser?.isSuperAdmin) {
-        return res.status(STATUS_CODES.UNAUTHORIZED).json({
-          error: 'You are not authorized to delete this company',
-        });
+        return next(
+          new HttpError(STATUS_CODES.UNAUTHORIZED, 'You are not authorized to delete this company')
+        );
       }
       const userModel = ModelFactory.getModel(MODELS.USER);
       const companyModel = ModelFactory.getModel(MODELS.COMPANY);
@@ -104,8 +108,7 @@ export class CompanyController {
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(new HttpError(STATUS_CODES.BAD_REQUEST, e.message, e));
     }
   };
 }

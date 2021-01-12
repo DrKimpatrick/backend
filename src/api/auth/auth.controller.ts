@@ -3,9 +3,9 @@ import * as url from 'url';
 import path from 'path';
 import passport from 'passport';
 import jsonwebtoken from 'jsonwebtoken';
-import { environment } from '../../config/environment';
 import cache from '../../shared/cache';
 import IUser from '../../models/interfaces/user.interface';
+import { environment } from '../../config/environment';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/mailchimp';
@@ -14,6 +14,7 @@ import { generateAccessToken, generateVerificationToken } from '../../helpers/au
 import { logger } from '../../shared/winston';
 import { BaseTokenPayload } from '../../interfaces';
 import { generateJWTToken } from '../../helpers';
+import { HttpError } from '../../helpers/error.helpers';
 
 /**
  * @function authController
@@ -53,7 +54,7 @@ export class AuthController {
     res.redirect(endpoint);
   }
 
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response, next: NextFunction) {
     const { username, email, password } = req.body;
     try {
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
@@ -83,14 +84,17 @@ export class AuthController {
           'Registration complete. An activation link has been sent to your email. Click it to verify your account',
       });
     } catch (error) {
-      logger.error(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Could not complete registration due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not complete registration due to internal server error',
+          error
+        )
+      );
     }
   }
 
-  async verifyUserAccount(req: Request, res: Response) {
+  async verifyUserAccount(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req?.currentUser?.id;
       if (req?.currentUser?.verified) {
@@ -105,14 +109,17 @@ export class AuthController {
         message: `Account verification complete. Login at ${environment.baseUrl}/api/v1/auth/login to access your account`,
       });
     } catch (error) {
-      logger.error(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Could not verify user account due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not verify user account due to internal server error',
+          error
+        )
+      );
     }
   }
 
-  async refreshToken(req: Request, res: Response) {
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.headers.authorization?.split(' ')[1];
 
@@ -135,12 +142,11 @@ export class AuthController {
 
       return res.status(STATUS_CODES.OK).json({ token: newToken });
     } catch (error) {
-      logger.error(error.message);
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
+      return next(new HttpError(STATUS_CODES.UNAUTHORIZED, 'Invalid refresh token', error));
     }
   }
 
-  async forgetPassword(req: Request, res: Response) {
+  async forgetPassword(req: Request, res: Response, next: NextFunction) {
     const { email } = req.body;
     try {
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
@@ -169,14 +175,17 @@ export class AuthController {
         message: 'Please check your email for password reset instructions',
       });
     } catch (error) {
-      logger.error(error.message);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({
-        error: 'Could not send instructions to reset password due to an internal server error',
-      });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not send instructions to reset password due to an internal server error',
+          error
+        )
+      );
     }
   }
 
-  async resetPassword(req: Request, res: Response) {
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
     const { password } = req.body;
     try {
       const userId = req?.currentUser?.id;
@@ -190,10 +199,13 @@ export class AuthController {
         message: 'Password reset successful, you can now login',
       });
     } catch (error) {
-      logger.error(error.message);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Could not reset your password due to an internal server' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not reset your password due to an internal server',
+          error
+        )
+      );
     }
   }
 }

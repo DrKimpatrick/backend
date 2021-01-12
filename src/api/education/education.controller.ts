@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { logger } from '../../shared/winston';
 import { EducationHistory } from '../../models/interfaces/education.interface';
+import { HttpError } from '../../helpers/error.helpers';
 
 /**
  * @function UserController
@@ -10,7 +11,7 @@ import { EducationHistory } from '../../models/interfaces/education.interface';
  *
  */
 export class EducationController {
-  create = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.currentUser?.id;
       const educ = req.body;
@@ -31,12 +32,17 @@ export class EducationController {
 
       return res.json({ data: educationHistory });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to create education history due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  get = async (req: Request, res: Response) => {
+  get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eduId = req.params.id;
       let userId = req.currentUser?.id;
@@ -56,12 +62,17 @@ export class EducationController {
 
       return res.json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch education history due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  remove = async (req: Request, res: Response) => {
+  remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eduId = req.params.id;
       let userId = req.currentUser?.id;
@@ -75,14 +86,12 @@ export class EducationController {
       const userModel = ModelFactory.getModel(MODELS.USER);
       const user = await userModel.findById(userId).exec();
       if (!user) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          message: 'Could not find this user',
-        });
+        return next(new HttpError(STATUS_CODES.BAD_REQUEST, 'Could not find this user'));
       }
       if (!user.educationHistory.includes(data.id.toString())) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          message: 'User has no matching education record',
-        });
+        return next(
+          new HttpError(STATUS_CODES.BAD_REQUEST, 'User has no matching education record')
+        );
       }
       data = await educModel.findByIdAndDelete(data.id.toString()).exec();
       await userModel
@@ -97,12 +106,17 @@ export class EducationController {
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to delete education history due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  update = async (req: Request, res: Response) => {
+  update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eduId = req.params.id;
       const eduModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
@@ -130,28 +144,28 @@ export class EducationController {
 
       const user = await userModel.findById(userId).exec();
       if (!user) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          message: 'Could not find this user',
-        });
+        return next(new HttpError(STATUS_CODES.BAD_REQUEST, 'Could not find this user'));
       }
       if (!user.educationHistory.includes(eduId)) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          message: 'User has no matching education record',
-        });
+        return next(
+          new HttpError(STATUS_CODES.BAD_REQUEST, 'User has no matching education record')
+        );
       }
       const data = await eduModel.findByIdAndUpdate(eduId, update, { new: true }).exec();
 
       return res.status(STATUS_CODES.OK).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to update education history due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  changeEducationStatus = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: EducationHistory }>> => {
+  changeEducationStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -166,17 +180,20 @@ export class EducationController {
       );
 
       if (!updateEducation) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'education not found' });
+        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'education not found'));
       }
 
       return res
         .status(STATUS_CODES.OK)
         .json({ data: updateEducation, message: 'updated successfully' });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'unable to perform this action due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to update education status due to internal server error',
+          error
+        )
+      );
     }
   };
 }

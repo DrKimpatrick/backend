@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { COURSE_VERIFICATION_STATUS, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { logger } from '../../shared/winston';
 import { ICourse } from '../../models/interfaces/course.interface';
+import { HttpError } from '../../helpers/error.helpers';
 
 /**
  * @function CourseController
@@ -11,10 +12,7 @@ import { ICourse } from '../../models/interfaces/course.interface';
  */
 
 export class CourseController {
-  registerCourse = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: ICourse }>> => {
+  registerCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.currentUser?._id;
 
@@ -47,17 +45,17 @@ export class CourseController {
         .status(STATUS_CODES.CREATED)
         .json({ message: 'course saved successfully', data: newCourse });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to save course due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to save course due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  listCourses = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ data: ICourse[]; totalItems: number }>> => {
+  listCourses = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { limit, offset } = req.query;
 
@@ -110,17 +108,17 @@ export class CourseController {
 
       return res.status(STATUS_CODES.OK).json({ data: courses, totalItems });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to fetch courses due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch courses due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  listSpecificCourse = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ data: ICourse }>> => {
+  listSpecificCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -152,17 +150,17 @@ export class CourseController {
 
       return res.status(STATUS_CODES.OK).json({ data: course });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to fetch course due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch course due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  updateCourse = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ message: string; data: ICourse }>> => {
+  updateCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -210,17 +208,17 @@ export class CourseController {
         .status(STATUS_CODES.OK)
         .json({ message: data ? 'course updated successfully' : 'failed to update course', data });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to update course due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to update course due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  listCoursesByStatus = async (
-    req: Request,
-    res: Response
-  ): Promise<Response<{ data: ICourse[]; totalItems: number; lastUpdatedItem: ICourse }>> => {
+  listCoursesByStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { offset, limit } = req.query;
       const { status } = req.params;
@@ -247,10 +245,13 @@ export class CourseController {
         lastUpdatedItem,
       });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to fetch courses due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch courses due to internal server error',
+          error
+        )
+      );
     }
   };
 }

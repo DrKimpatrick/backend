@@ -121,7 +121,7 @@ describe('School', () => {
         .set('Authorization', `Bearer ${newUserToken}`)
         .send({ name: 'school name updated' });
       expect(res.status).toEqual(STATUS_CODES.UNAUTHORIZED);
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('message');
     });
   });
 
@@ -134,7 +134,7 @@ describe('School', () => {
         .delete(`/api/v1/school/${schoolId}`)
         .set('Authorization', `Bearer ${newUserToken}`);
       expect(res.status).toEqual(STATUS_CODES.UNAUTHORIZED);
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('message');
     });
 
     it('should delete a school', async () => {

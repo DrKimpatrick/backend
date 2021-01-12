@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
@@ -6,6 +6,7 @@ import { logger } from '../../shared/winston';
 import { createSkills } from '../skills/skills.controller';
 import { getPagination } from '../../helpers';
 import User from '../../models/interfaces/user.interface';
+import { HttpError } from '../../helpers/error.helpers';
 
 /**
  * @function UserController
@@ -13,7 +14,7 @@ import User from '../../models/interfaces/user.interface';
  *
  */
 export class UserController {
-  async addBetaTester(req: Request, res: Response) {
+  async addBetaTester(req: Request, res: Response, next: NextFunction) {
     try {
       const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
       const { accountType, name, email } = req.body;
@@ -24,14 +25,16 @@ export class UserController {
         data: newBetaTester,
       });
     } catch (error) {
-      logger.error(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ error: 'Could not save user information due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not save user information due to internal server error'
+        )
+      );
     }
   }
 
-  listUsers = async (req: Request, res: Response) => {
+  listUsers = async (req: Request, res: Response, next: NextFunction) => {
     const rolesAsString = req.query.roles as string;
     let condition = {};
     if (rolesAsString) {
@@ -56,12 +59,16 @@ export class UserController {
         limit,
       });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch users due to internal server error'
+        )
+      );
     }
   };
 
-  getUser = async (req: Request, res: Response) => {
+  getUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.params.id;
 
@@ -91,17 +98,19 @@ export class UserController {
 
       return res.json({ profile: user });
     } catch (e) {
-      logger.info(e);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'Unable to fetch user due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch user due to internal server error'
+        )
+      );
     }
   };
 
   getAuthenticatedUser = async (req: Request, res: Response) =>
     res.status(STATUS_CODES.OK).json({ profile: req.currentUser });
 
-  profileEdit = async (req: Request, res: Response) => {
+  profileEdit = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.params.id;
 
@@ -124,8 +133,7 @@ export class UserController {
         try {
           skills = await createSkills(skills, userId);
         } catch (e) {
-          logger.info(e);
-          return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+          return next(new HttpError(STATUS_CODES.BAD_REQUEST, e.message));
         }
       }
 
@@ -145,13 +153,12 @@ export class UserController {
         .findByIdAndUpdate(userId, { ...req.body, $set: setUpdate }, { new: true })
         .exec();
       if (user == null) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'User not found' });
+        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'User not found'));
       }
 
       return res.json({ profile: { ...user.toJSON(), skills } });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: `Error: ${e.message}` });
+      return next(new HttpError(STATUS_CODES.SERVER_ERROR, `${e.message}`, e));
     }
   };
 
@@ -201,7 +208,7 @@ export class UserController {
     return { error: null, data: [...updateDocs, ...newDocs].map((c) => c._id.toString()) };
   };
 
-  getTalents = async (req: Request, res: Response) => {
+  getTalents = async (req: Request, res: Response, next: NextFunction) => {
     const skills = req.query.skills as string;
     const { subscription } = req.query;
     try {
@@ -227,16 +234,21 @@ export class UserController {
           .exec();
       }
       if (talents.length === 0) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'No users found' });
+        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'No users found'));
       }
       return res.json({ data: talents });
     } catch (error) {
-      logger.info(error);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch talent data due to internal server error',
+          error
+        )
+      );
     }
   };
 
-  fetchUserSkillsByUserId = async (req: Request, res: Response) => {
+  fetchUserSkillsByUserId = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId } = req.params;
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
@@ -249,8 +261,12 @@ export class UserController {
 
       return res.status(STATUS_CODES.OK).json({ data });
     } catch (error) {
-      logger.error(error);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: error.message });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch user skiils  due to internal server error'
+        )
+      );
     }
   };
 }

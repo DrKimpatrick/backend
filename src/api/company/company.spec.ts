@@ -134,7 +134,7 @@ describe('Company', () => {
         .delete(`/api/v1/company/${companyId}`)
         .set('Authorization', `Bearer ${newUserToken}`);
       expect(res.status).toEqual(STATUS_CODES.UNAUTHORIZED);
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('message');
     });
 
     it('should delete a company', async () => {

@@ -20,6 +20,7 @@ const handleHttpError = (err: HttpError, res: Response) => {
   const { statusCode, message } = err;
 
   logger.error(err.errorInstance?.stack ?? message);
+  // TODO: Remote error tracking goes here
 
   return res.status(statusCode).json({
     statusCode,

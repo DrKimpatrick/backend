@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { logger } from '../../shared/winston';
+import { HttpError } from '../../helpers/error.helpers';
 
 export class SchoolController {
-  create = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.currentUser?.id;
       const userModel = ModelFactory.getModel(MODELS.USER);
@@ -23,8 +24,13 @@ export class SchoolController {
         .status(STATUS_CODES.CREATED)
         .json({ message: 'School added successfully', data: newSchool });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to create school due to internal server error',
+          e
+        )
+      );
     }
   };
 
@@ -51,14 +57,14 @@ export class SchoolController {
     }
   };
 
-  update = async (req: Request, res: Response) => {
+  update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const school = await this.schoolById(req.params.id);
       const userId = req.currentUser?.id;
       if (school.userId.toString() !== userId?.toString() && !req.currentUser?.isSuperAdmin) {
-        return res.status(STATUS_CODES.UNAUTHORIZED).json({
-          error: 'You are not authorized to update this school',
-        });
+        return next(
+          new HttpError(STATUS_CODES.UNAUTHORIZED, 'You are not authorized to update this school')
+        );
       }
       delete req.body?.userId;
       const schoolModel = ModelFactory.getModel(MODELS.SCHOOL);
@@ -68,19 +74,18 @@ export class SchoolController {
       updatedSchool.__v = undefined;
       return res.status(STATUS_CODES.OK).json({ data: updatedSchool });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(new HttpError(STATUS_CODES.SERVER_ERROR, e.message, e));
     }
   };
 
-  remove = async (req: Request, res: Response) => {
+  remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const school = await this.schoolById(req.params.id);
       const userId = req.currentUser?.id;
       if (school.userId.toString() !== userId?.toString() && !req.currentUser?.isSuperAdmin) {
-        return res.status(STATUS_CODES.UNAUTHORIZED).json({
-          error: 'You are not authorized to delete this school',
-        });
+        return next(
+          new HttpError(STATUS_CODES.UNAUTHORIZED, 'You are not authorized to delete this school')
+        );
       }
       const userModel = ModelFactory.getModel(MODELS.USER);
       const schoolModel = ModelFactory.getModel(MODELS.SCHOOL);
@@ -95,8 +100,7 @@ export class SchoolController {
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(new HttpError(STATUS_CODES.SERVER_ERROR, e.message, e));
     }
   };
 }

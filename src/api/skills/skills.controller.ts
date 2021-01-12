@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
 import { logger } from '../../shared/winston';
 import { IUserSkill } from '../../interfaces';
+import { HttpError } from '../../helpers/error.helpers';
 
 export async function checkMissingExist(skillIds: string[]) {
   const skillModel = ModelFactory.getModel(MODELS.SKILL);
@@ -49,7 +50,7 @@ export async function createSkills(rawSkills: IUserSkill[], userId: string) {
  *
  */
 export class SkillsController {
-  createSkills = async (req: Request, res: Response) => {
+  createSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       let skills = req.body || [];
       // make sure we dont save unwanted fields
@@ -60,12 +61,17 @@ export class SkillsController {
 
       return res.status(STATUS_CODES.CREATED).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: e.message });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not create skill due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  fetchSkills = async (req: Request, res: Response) => {
+  fetchSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skillId = req.params.id;
       const skillModel = ModelFactory.getModel(MODELS.SKILL);
@@ -78,12 +84,17 @@ export class SkillsController {
 
       return res.json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  deleteSkills = async (req: Request, res: Response) => {
+  deleteSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skillId = req.params.id;
       const skillModel = ModelFactory.getModel(MODELS.SKILL);
@@ -95,12 +106,17 @@ export class SkillsController {
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not delete skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  updateSkills = async (req: Request, res: Response) => {
+  updateSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skillId = req.params.id;
       const skillModel = ModelFactory.getModel(MODELS.SKILL);
@@ -111,12 +127,17 @@ export class SkillsController {
 
       return res.status(STATUS_CODES.OK).json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not update skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  fetchUserSkills = async (req: Request, res: Response) => {
+  fetchUserSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.currentUser?.id;
       const userSkillModel = ModelFactory.getModel(MODELS.USER_SKILLS);
@@ -128,12 +149,17 @@ export class SkillsController {
 
       return res.json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: e.message });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not fetch user skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  createUserSkills = async (req: Request, res: Response) => {
+  createUserSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skills: IUserSkill[] = req.body;
       const userId = req.currentUser?.id as string;
@@ -145,12 +171,17 @@ export class SkillsController {
 
       return res.status(status).json({ data });
     } catch (e) {
-      logger.error(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: e.message });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not create user skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  updateUserSkills = async (req: Request, res: Response) => {
+  updateUserSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skills = req.body || [];
 
@@ -176,10 +207,12 @@ export class SkillsController {
       const updateIds = skills.map((x: Record<string, string>) => x.userSkill.toString());
       const notFound = updateIds.filter((id: string) => !userSkills.includes(id));
       if (notFound.length > 0) {
-        return res.status(STATUS_CODES.FORBIDDEN).send({
-          message: `You are not allowed to updated Skills(s) '${notFound}`,
-          data: null,
-        });
+        return next(
+          new HttpError(
+            STATUS_CODES.FORBIDDEN,
+            `You are not allowed to updated Skills(s) '${notFound}`
+          )
+        );
       }
       // END: make sure user only updates his skills
 
@@ -195,12 +228,17 @@ export class SkillsController {
 
       return res.json({ data });
     } catch (e) {
-      logger.info(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not update user skills due to internal server error',
+          e
+        )
+      );
     }
   };
 
-  changeUserSkillStatus = async (req: Request, res: Response) => {
+  changeUserSkillStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -219,21 +257,23 @@ export class SkillsController {
         .exec();
 
       if (!changeStatus) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({ message: 'skill not found' });
+        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'skill not found'));
       }
 
       return res
         .status(STATUS_CODES.OK)
         .json({ data: changeStatus, message: 'updated successfully' });
     } catch (error) {
-      logger.info(error);
-      return res
-        .status(STATUS_CODES.SERVER_ERROR)
-        .json({ message: 'unable to perform this action due to internal server error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.NOT_FOUND,
+          'Unable to update user skill due to internal server error'
+        )
+      );
     }
   };
 
-  deleteUserSkills = async (req: Request, res: Response) => {
+  deleteUserSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skills = req.body || [];
 
@@ -246,8 +286,12 @@ export class SkillsController {
 
       return res.status(STATUS_CODES.NO_CONTENT).json({ data: userSkills });
     } catch (e) {
-      logger.error(e);
-      return res.status(STATUS_CODES.SERVER_ERROR).json({ message: 'Server Error' });
+      return next(
+        new HttpError(
+          STATUS_CODES.NOT_FOUND,
+          'Unable to delete user skill due to internal server error'
+        )
+      );
     }
   };
 }

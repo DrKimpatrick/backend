@@ -74,10 +74,13 @@ export class SkillsController {
   fetchSkills = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const skillId = req.params.id;
+      const { searchKey } = req.query;
       const skillModel = ModelFactory.getModel(MODELS.SKILL);
       let data;
       if (skillId) {
         data = await skillModel.findById(skillId).exec();
+      } else if (searchKey) {
+        data = await skillModel.find({ skill: { $regex: searchKey, $options: 'i' } }).exec();
       } else {
         data = await skillModel.find().exec();
       }

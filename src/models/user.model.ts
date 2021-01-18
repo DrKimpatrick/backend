@@ -133,6 +133,16 @@ const userSchema = new Schema(
       type: String,
       required: false,
     },
+    paypalEmail: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    linkToPlatform: {
+      type: String,
+      required: false,
+      default: null,
+    },
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

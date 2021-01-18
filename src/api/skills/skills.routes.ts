@@ -268,7 +268,7 @@ skillRouter.post(
 
 /**
  * @swagger
- * /api/v1/skills:
+ * /api/v1/skills or /api/v1/skills/?searchKey=text:
  *   get:
  *     summary: Fetch all available skill sets
  *     tags: [Skills]

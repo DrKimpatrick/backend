@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
-import { logger } from '../../shared/winston';
 import { EmploymentHistory } from '../../models/interfaces/employment.interface';
 import { HttpError } from '../../helpers/error.helpers';
 

@@ -32,6 +32,12 @@ describe('Skills /skills', () => {
     token = user.toAuthJSON().token;
   });
 
+  afterEach(async () => {
+    await userM.deleteMany({});
+    await skillModel.deleteMany({});
+    await userSkillModel.deleteMany({});
+  });
+
   it('should return an error when given wrong data', async (done) => {
     user = await userM.findByIdAndUpdate(
       user.id,
@@ -92,6 +98,23 @@ describe('Skills /skills', () => {
         expect(Array.isArray(res.body.data)).toBeTruthy();
         expect(res.body.data).toHaveLength(1);
         expect(res.body.data[0]._id).toEqual(skill._id.toString());
+        done();
+      });
+  });
+
+  it('should partially search skill sets', async (done) => {
+    const skill = await skillModel.create({ skill: 'JavaScript' });
+
+    supertest(app)
+      .get('/api/v1/skills/?searchKey=java')
+      .set('Authorization', `Bearer ${token}`)
+      .end((err, res) => {
+        expect(res.status).toBe(STATUS_CODES.OK);
+        expect(res.body).toHaveProperty('data');
+        expect(Array.isArray(res.body.data)).toBeTruthy();
+        expect(res.body.data).toContainEqual(
+          expect.objectContaining({ _id: skill._id.toString() })
+        );
         done();
       });
   });

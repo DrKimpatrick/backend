@@ -173,6 +173,9 @@ export function userProfileRules() {
         return true;
       })
       .optional(),
+    // Validate fields meant for affiliate user
+    body('paypalEmail').optional().isEmail(),
+    body('linkToPlatform').optional().notEmpty({ ignore_whitespace: true }),
   ];
 }
 

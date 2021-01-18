@@ -278,8 +278,8 @@ describe('User /users', () => {
     });
   });
 
-  describe('GET /users/talent?skills=id,id', () => {
-    it('should successfully search talent based on skills', async (done) => {
+  describe('GET /users/talent?skills=id,id&subscript=basic|standard|premium', () => {
+    it('should successfully search talent based on skills and subscription', async (done) => {
       const skill = await skillModel.create({ skill: 'Javascript' });
       const newUser = await userM.create({
         email: 'test@gmail.com',
@@ -298,7 +298,7 @@ describe('User /users', () => {
         { new: true }
       );
       supertest(app)
-        .get(`/api/v1/users/talent?skills=${skill._id}`)
+        .get(`/api/v1/users/talent?skills=${skill._id}&subscription=basic`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.OK);

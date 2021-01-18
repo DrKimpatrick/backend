@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { MODELS, STATUS_CODES } from '../../constants';
-import { logger } from '../../shared/winston';
-import { EducationHistory } from '../../models/interfaces/education.interface';
 import { HttpError } from '../../helpers/error.helpers';
 
 /**

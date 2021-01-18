@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import { ModelFactory } from '../../models/model.factory';
 import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
-import { logger } from '../../shared/winston';
 import { createSkills } from '../skills/skills.controller';
 import { getPagination } from '../../helpers';
 import User from '../../models/interfaces/user.interface';
@@ -212,6 +211,10 @@ export class UserController {
     const skills = req.query.skills as string;
     const { subscription } = req.query;
     try {
+      let condition = {};
+      if (skills && subscription) {
+        condition = { featureChoice: subscription };
+      }
       const userModel = ModelFactory.getModel(MODELS.USER);
       const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
       let talents = [];
@@ -223,12 +226,13 @@ export class UserController {
             path: 'user',
             match: {
               roles: { $in: [USER_ROLES.TALENT] },
+              ...condition,
             },
           })
           .exec();
         talents = userSkills.map((x: Record<string, unknown>) => x.user).filter((x) => !!x);
       }
-      if (subscription) {
+      if (subscription && !skills) {
         talents = await userModel
           .find({ featureChoice: subscription, roles: [USER_ROLES.TALENT] })
           .exec();

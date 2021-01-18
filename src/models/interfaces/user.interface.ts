@@ -25,6 +25,8 @@ export default interface IUser extends Document {
   profileProcess?: string;
   bio?: string;
   profilePicture?: string;
+  paypalEmail?: string;
+  linkToPlatform?: string;
 }
 
 export interface IUserCoupon extends Document {

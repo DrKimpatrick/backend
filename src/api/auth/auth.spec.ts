@@ -8,6 +8,7 @@ import { ModelFactory } from '../../models/model.factory';
 import { MODELS, SIGNUP_MODE, STATUS_CODES } from '../../constants';
 import { generateVerificationToken } from '../../helpers/auth.helpers';
 import { generateJWTToken } from '../../helpers';
+import { USER_ROLES } from '../../constants/index';
 
 describe('Auth /auth', () => {
   const userM = ModelFactory.getModel(MODELS.USER);
@@ -549,6 +550,50 @@ describe('Auth /auth', () => {
           expect(res.body).toEqual(expect.objectContaining({ message: expect.any(String) }));
           done();
         });
+    });
+  });
+  describe('register affiliate user as super admin', () => {
+    let superAdminToken: string;
+
+    beforeEach(async () => {
+      const newUser = await userM.create({
+        signupMode: SIGNUP_MODE.LOCAL,
+        firstName: 'Some Name',
+        email: `testing${Math.random()}@gmail.com`,
+        username: faker.internet.userName(),
+        verified: true,
+        password: 'really',
+        roles: [USER_ROLES.SUPER_ADMIN],
+      });
+
+      superAdminToken = newUser.toAuthJSON().token;
+    });
+
+    it('should register new affiliate user', async () => {
+      const res = await supertest(app)
+        .post('/api/v1/auth/affiliate/register')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({
+          username: 'bonane',
+          email: `newaff${Math.random()}@gmail.com`,
+          password: 'Hacker@12',
+          paypalEmail: 'paypal@gmail.com',
+          profilePicture: 'http://www.igihe.com/image.png',
+          bio: 'bio',
+        });
+
+      expect(res.status).toEqual(STATUS_CODES.CREATED);
+    });
+
+    it('should return validation error', async () => {
+      const res = await supertest(app)
+        .post('/api/v1/auth/affiliate/register')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({});
+
+      expect(res.status).toEqual(STATUS_CODES.BAD_REQUEST);
+
+      expect(res.body).toHaveProperty('errors');
     });
   });
 });

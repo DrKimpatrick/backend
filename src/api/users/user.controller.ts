@@ -273,6 +273,16 @@ export class UserController {
       );
     }
   };
+
+  uploadImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      return res.status(STATUS_CODES.OK).json({ data: { files: req.files } });
+    } catch (error) {
+      return next(
+        new HttpError(STATUS_CODES.SERVER_ERROR, 'Failed to upload due to internal server error')
+      );
+    }
+  };
 }
 
 const userController = new UserController();

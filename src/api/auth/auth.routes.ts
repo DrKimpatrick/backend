@@ -7,9 +7,11 @@ import {
   registrationRules,
   passwordValidator,
   confirmPasswordValidator,
+  registerAffiliateRules,
 } from '../../helpers/request-validation.helpers';
 import { validate } from '../../middleware/request-validation.middleware';
-import { requireToken } from '../../middleware/auth.middleware';
+import { requireToken, requireRoles } from '../../middleware/auth.middleware';
+import { USER_ROLES } from '../../constants/index';
 
 const authRouter = Router();
 
@@ -394,6 +396,62 @@ authRouter.post(
   requireToken(true),
   validate([...passwordValidator(), ...confirmPasswordValidator()]),
   authController.resetPassword
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/affiliate/register:
+ *   post:
+ *     summary: Register Affiliate user as super admin
+ *     tags: [Auth]
+ *     description: Register a user
+ *     parameters:
+ *       - name: email
+ *         description: user email
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: username
+ *         description: Username
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: password
+ *         description: user password
+ *         in: body
+ *         required: true
+ *         type: string
+ *         format: password
+ *       - name: profilePicture
+ *         description: user profile picture
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: paypalEmail
+ *         description: paypal email
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/RegisterResponse'
+ *       400:
+ *          description: Bad request
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/RegistrationError'
+ */
+authRouter.post(
+  '/affiliate/register',
+  requireToken(),
+  requireRoles([USER_ROLES.SUPER_ADMIN]),
+  validate(registerAffiliateRules()),
+  authController.registerAffiliateUser
 );
 
 export { authRouter };

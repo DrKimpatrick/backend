@@ -78,6 +78,18 @@ export function registrationRules() {
   return [...emailValidator(), ...usernameValidator(), ...passwordValidator()];
 }
 
+export const registerAffiliateRules = () => {
+  return [
+    ...emailValidator(),
+    ...usernameValidator(),
+    ...passwordValidator(),
+    body('paypalEmail').notEmpty().withMessage('paypal email is required'),
+    body('paypalEmail').isEmail().withMessage('paypal email must be valid'),
+    body('profilePicture').notEmpty().withMessage('profile picture is required'),
+    body('profilePicture').isURL().withMessage('profile picture must be valid'),
+  ];
+};
+
 export function newBetaTesterRules() {
   const betaTestersModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
   return [

@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import multer from 'multer';
 import userController from './user.controller';
 import { userProfileRules } from '../../helpers/user-profile-validation.helper';
 import { newBetaTesterRules } from '../../helpers/request-validation.helpers';
 import { validate } from '../../middleware/request-validation.middleware';
 import { requireRoles } from '../../middleware/auth.middleware';
 import { USER_ROLES } from '../../constants';
+import { cloudinaryStorage } from '../../config/cloudinary';
 
 const userRouter = Router();
 
@@ -427,6 +429,53 @@ userRouter.get(
   '/:userId/skills',
   requireRoles([USER_ROLES.SUPER_ADMIN], false),
   userController.fetchUserSkillsByUserId
+);
+
+/**
+ * @swagger
+ * /api/v1/users/upload:
+ *   post:
+ *     summary: Upload images
+ *     tags: [Users]
+ *     description: Upload images on cloudinary
+ *     parameters:
+ *       - name: image file
+ *         description:
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: list of files
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                data:
+ *                 type: object
+ *                 properties:
+ *                   files:
+ *                    type: object
+ *                    properties:
+ *                     fieldname:
+ *                       type: string
+ *                       description: fieldname
+ *                     originalname:
+ *                       type: string
+ *                       description: avatar.png
+ *                     encoding:
+ *                       type: string
+ *                       description: 7bit
+ *                     path:
+ *                      type: string
+ *                      description: cloudinary link
+ */
+
+userRouter.post(
+  '/upload',
+  multer({ storage: cloudinaryStorage() }).array('images'),
+  userController.uploadImage
 );
 
 export { userRouter };

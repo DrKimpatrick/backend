@@ -6,7 +6,7 @@ import jsonwebtoken from 'jsonwebtoken';
 import cache from '../../shared/cache';
 import IUser from '../../models/interfaces/user.interface';
 import { environment } from '../../config/environment';
-import { MODELS, STATUS_CODES } from '../../constants';
+import { MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/mailchimp';
 import { getEmailTemplate } from '../../shared/email.templates';
@@ -55,16 +55,19 @@ export class AuthController {
   }
 
   async register(req: Request, res: Response, next: NextFunction) {
-    const { username, email, password } = req.body;
     try {
+      const { username, email, password } = req.body;
+
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
-      const user = await userModel.create({
-        username,
-        email,
-        password,
-      });
+
+      const newUser = { username, email, password };
+
+      const user = await userModel.create(newUser);
+
       const confirmationToken = generateVerificationToken(user.id);
+
       const pathToTemplate = path.join(__dirname, '../../', 'templates/account-confirmation.ejs');
+
       const ejsData = {
         username: user.username,
         token: confirmationToken,
@@ -203,6 +206,50 @@ export class AuthController {
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
           'Could not reset your password due to an internal server',
+          error
+        )
+      );
+    }
+  }
+
+  async registerAffiliateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+
+      const newUser = {
+        ...req.body,
+        roles: [USER_ROLES.TRAINING_AFFILIATE],
+      };
+
+      const user = await userModel.create(newUser);
+
+      const confirmationToken = generateVerificationToken(user.id);
+
+      const pathToTemplate = path.join(__dirname, '../../', 'templates/account-confirmation.ejs');
+
+      const ejsData = {
+        username: user.username,
+        token: confirmationToken,
+        baseUrl: environment.baseUrl,
+      };
+
+      const confirmationEmail: Email = {
+        html: await getEmailTemplate(pathToTemplate, ejsData),
+        subject: 'Tech Talent Account Confirmation',
+        to: [{ email: user.email, type: 'to' }],
+      };
+
+      sendEmail(confirmationEmail);
+
+      return res.status(STATUS_CODES.CREATED).json({
+        message:
+          'Registration complete. An activation link has been sent to your email. Click it to verify your account',
+      });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Could not complete registration due to internal server error',
           error
         )
       );

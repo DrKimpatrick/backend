@@ -8,7 +8,7 @@ import IUser from '../../models/interfaces/user.interface';
 import { environment } from '../../config/environment';
 import { MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
-import { Email, sendEmail } from '../../config/mailchimp';
+import { Email, sendEmail } from '../../config/sendgrid';
 import { getEmailTemplate } from '../../shared/email.templates';
 import { generateAccessToken, generateVerificationToken } from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
@@ -77,7 +77,7 @@ export class AuthController {
       const confirmationEmail: Email = {
         html: await getEmailTemplate(pathToTemplate, ejsData),
         subject: 'Tech Talent Account Confirmation',
-        to: [{ email: user.email, type: 'to' }],
+        to: user.email,
       };
 
       sendEmail(confirmationEmail);
@@ -169,7 +169,7 @@ export class AuthController {
       const resetPasswordEmail: Email = {
         html: await getEmailTemplate(pathToTemplate, ejsData),
         subject: 'Tech Talent Account Reset Password',
-        to: [{ email: user.email, type: 'to' }],
+        to: user.email,
       };
 
       sendEmail(resetPasswordEmail);
@@ -236,7 +236,7 @@ export class AuthController {
       const confirmationEmail: Email = {
         html: await getEmailTemplate(pathToTemplate, ejsData),
         subject: 'Tech Talent Account Confirmation',
-        to: [{ email: user.email, type: 'to' }],
+        to: user.email,
       };
 
       sendEmail(confirmationEmail);

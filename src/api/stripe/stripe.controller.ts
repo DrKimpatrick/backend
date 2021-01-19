@@ -14,7 +14,7 @@ import { HttpError } from '../../helpers/error.helpers';
 import IUser, { IUserCoupon } from '../../models/interfaces/user.interface';
 import { ModelFactory } from '../../models/model.factory';
 import { Subsidy } from '../../interfaces';
-import { sendEmail } from '../../config/mailchimp';
+import { sendEmail } from '../../config/sendgrid';
 import { getEmailTemplate } from '../../shared/email.templates';
 
 const stripe = new Stripe(environment.stripeApiKey, {
@@ -192,7 +192,7 @@ export class StripeController {
 
       await sendEmail({
         subject: 'Subscription Coupon/Code for talent Users.',
-        to: [{ email: req.currentUser?.email as string, type: 'to' }],
+        to: req.currentUser?.email as string,
         html: await getEmailTemplate(pathToTemplate, ejsData),
       });
 

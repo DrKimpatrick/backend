@@ -1,42 +1,39 @@
-// @ts-ignore
-import mailchimp_transactional from '@mailchimp/mailchimp_transactional';
+import sgMail from '@sendgrid/mail';
+
 import { SENDER_EMAIL } from '../constants';
 import { logger } from '../shared/winston';
 import { environment } from './environment';
 
 export interface Email {
+  to: string;
   subject: string;
+  text?: string;
   html: string;
-  to: [
-    {
-      email: string;
-      type: 'to' | 'cc' | 'bcc';
-    }
-  ];
 }
 
-const mailchimp = mailchimp_transactional(environment.mailchimpApiKey);
+sgMail.setApiKey(environment.sendgridApiKey);
 
 export const sendEmail = async (email: Email) => {
   const message = {
-    from_email: SENDER_EMAIL,
+    from: SENDER_EMAIL,
     ...email,
   };
 
   // Don't send emails in development
-  if (environment.env === 'development') {
+  if (environment.env !== 'production') {
     logger.info(JSON.stringify(message));
 
     return;
   }
 
   try {
-    await mailchimp.messages.send({
-      message,
-    });
-
-    return;
+    await sgMail.send(message);
+    logger.info('Mail sent');
   } catch (error) {
     logger.error(error);
+
+    if (error.response) {
+      logger.error(error.response.body);
+    }
   }
 };

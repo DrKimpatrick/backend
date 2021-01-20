@@ -199,3 +199,8 @@ export enum SUBSIDY_INTERVAL {
   MONTH = 'month',
   YEAR = 'year',
 }
+
+export enum CourseTimeFormat {
+  Minute = 'Min',
+  Hour = 'Hr',
+}

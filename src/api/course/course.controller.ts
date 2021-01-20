@@ -19,23 +19,16 @@ export class CourseController {
 
       const courseModel = ModelFactory.getModel(MODELS.COURSE);
 
-      const {
-        name,
-        currentLangSpecsUpdated,
-        instructor,
-        languageTaught,
-        existingCourseLink,
-        coverImageLink,
-      } = req.body;
+      const { duration, format } = req.body;
+
+      if (req.body.verificationStatus) {
+        delete req.body.verificationStatus;
+      }
 
       const newCourse = await courseModel.create({
-        name,
-        currentLangSpecsUpdated,
-        instructor,
-        languageTaught,
-        existingCourseLink,
-        coverImageLink,
+        ...req.body,
         userId: id,
+        duration: `${duration} ${format}`,
       });
 
       await userModel.updateOne({ _id: id }, { $push: { courses: newCourse } });
@@ -172,25 +165,14 @@ export class CourseController {
       const getAffiliateRole = user?.roles?.find((item) => item === USER_ROLES.TRAINING_AFFILIATE);
 
       if (getAffiliateRole) {
-        const {
-          name,
-          currentLangSpecsUpdated,
-          instructor,
-          languageTaught,
-          existingCourseLink,
-          coverImageLink,
-        } = req.body;
+        const { duration, format } = req.body;
 
         data = await courseModel.findOneAndUpdate(
           { $and: [{ _id: id }, { userId: user?._id }] },
           {
             $set: {
-              name,
-              currentLangSpecsUpdated,
-              instructor,
-              languageTaught,
-              existingCourseLink,
-              coverImageLink,
+              ...req.body,
+              duration: `${duration} ${format}`,
             },
           },
           { new: true }

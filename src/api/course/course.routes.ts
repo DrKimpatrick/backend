@@ -122,6 +122,21 @@ const courseRouter = express.Router();
  *         in: body
  *         required: false
  *         type: string
+ *       - name: level
+ *         description: level
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: duration
+ *         description: duration
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: description
+ *         description: description
+ *         in: body
+ *         required: true
+ *         type: string
  *     responses:
  *       201:
  *         description: Registered
@@ -197,6 +212,21 @@ courseRouter.post(
  *         description: verification status
  *         in: body
  *         required: false
+ *         type: string
+ *       - name: level
+ *         description: level
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: duration
+ *         description: duration
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: description
+ *         description: description
+ *         in: body
+ *         required: true
  *         type: string
  *     responses:
  *       200:

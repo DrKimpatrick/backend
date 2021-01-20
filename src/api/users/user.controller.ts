@@ -77,12 +77,15 @@ export class UserController {
 
       const educationModel = ModelFactory.getModel(MODELS.EDUCATION_HISTORY);
 
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
       let user: User;
 
       const findUserByUsername = await userModel
         .findOne({ username: userId })
         .populate({ path: 'employmentHistory', model: emHistoryModel })
         .populate({ path: 'educationHistory', model: educationModel })
+        .populate({ path: 'courses', model: courseModel })
         .exec();
 
       if (findUserByUsername) {
@@ -92,6 +95,7 @@ export class UserController {
           .findById(userId)
           .populate({ path: 'employmentHistory', model: emHistoryModel })
           .populate({ path: 'educationHistory', model: educationModel })
+          .populate({ path: 'courses', model: courseModel })
           .exec();
       }
 

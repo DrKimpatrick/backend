@@ -8,6 +8,7 @@ import {
   USER_ROLES,
   TalentProcess,
   AdminsProcess,
+  CourseTimeFormat,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -192,6 +193,19 @@ export const courseValidator = () => [
   body('existingCourseLink', 'Course link must be valid link').matches(
     /(^http[s]?:\/{2})|(^www)|(^\/{1,2})$/
   ),
+
+  body('level').notEmpty().withMessage('Level is required'),
+  body('level')
+    .isIn(Object.values(SKILL_LEVEL))
+    .withMessage('level should be either advanced, beginner or intermediate'),
+
+  body('duration').notEmpty().withMessage('duration is required'),
+  body('duration').isNumeric().withMessage('duration must be a number'),
+
+  body('format').notEmpty().withMessage('time format is required'),
+  body('format')
+    .isIn(Object.values(CourseTimeFormat))
+    .withMessage('time format must be either in min or hrs'),
 ];
 
 export const verificationStatusRule = () => {

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { COURSE_VERIFICATION_STATUS } from '../constants';
+import { COURSE_VERIFICATION_STATUS, SKILL_LEVEL } from '../constants';
 import { ICourse } from './interfaces/course.interface';
 
 const { Schema } = mongoose;
@@ -45,6 +45,20 @@ export const courseSchema = new Schema(
         COURSE_VERIFICATION_STATUS.DECLINED,
       ],
       default: COURSE_VERIFICATION_STATUS.PENDING,
+    },
+    level: {
+      type: String,
+      required: true,
+      enum: Object.values(SKILL_LEVEL),
+    },
+    description: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    duration: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true }

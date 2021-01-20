@@ -8,4 +8,7 @@ export interface ICourse extends Document {
   existingCourseLink: string;
   coverImageLink: string;
   verificationStatus: string;
+  level: string;
+  description: string;
+  duration: string;
 }

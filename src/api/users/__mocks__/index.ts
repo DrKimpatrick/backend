@@ -1,4 +1,10 @@
-import { SIGNUP_MODE, Supervisor, EmploymentType } from '../../../constants';
+import {
+  SIGNUP_MODE,
+  Supervisor,
+  EmploymentType,
+  SKILL_LEVEL,
+  CourseTimeFormat,
+} from '../../../constants';
 
 const updateWrongEducationProfileData = {
   educationHistory: ['5f86b1a4c9233d2444064617'],
@@ -55,6 +61,9 @@ const addCourse = {
   languageTaught: 'English',
   existingCourseLink: 'https://youtube.com',
   coverImageLink: 'https://images.com/image.png',
+  level: SKILL_LEVEL.BEGINNER,
+  duration: 5,
+  format: CourseTimeFormat.Hour,
 };
 
 const addUser = (role: string) => {

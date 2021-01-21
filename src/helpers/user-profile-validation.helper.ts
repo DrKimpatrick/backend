@@ -9,6 +9,7 @@ import {
   TalentProcess,
   AdminsProcess,
   CourseTimeFormat,
+  AffiliateProcess,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -155,6 +156,21 @@ export function userProfileRules() {
                 return Promise.reject(`The provided step (${val}) does not exist`);
               }
               return true;
+
+            case USER_ROLES.TRAINING_AFFILIATE:
+              if (
+                req.currentUser.profileProcess &&
+                req.currentUser.profileProcess === AffiliateProcess.Completed
+              ) {
+                return Promise.reject('You have completed signup process');
+              }
+
+              if (!Object.values(AffiliateProcess).includes(val)) {
+                return Promise.reject(`The provided step (${val}) does not exist`);
+              }
+
+              return true;
+
             default:
               return Promise.reject('Failed to validate step');
           }

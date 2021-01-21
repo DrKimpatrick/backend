@@ -110,6 +110,11 @@ export enum AdminsProcess {
   Completed = 'Completed',
 }
 
+export enum AffiliateProcess {
+  AddMoreInfo = 'AddMoreInfo',
+  Completed = 'Completed',
+}
+
 export const PRODUCTS = {
   talent: '',
 };

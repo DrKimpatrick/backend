@@ -19,8 +19,6 @@ export class CourseController {
 
       const courseModel = ModelFactory.getModel(MODELS.COURSE);
 
-      const { duration, format } = req.body;
-
       if (req.body.verificationStatus) {
         delete req.body.verificationStatus;
       }
@@ -28,7 +26,6 @@ export class CourseController {
       const newCourse = await courseModel.create({
         ...req.body,
         userId: id,
-        duration: `${duration} ${format}`,
       });
 
       await userModel.updateOne({ _id: id }, { $push: { courses: newCourse } });
@@ -80,6 +77,7 @@ export class CourseController {
             {},
             { limit: limit ? Number(limit) : undefined, skip: offset ? Number(offset) : undefined }
           )
+          .populate('userId', '_id username email avatar')
           .sort({ updatedAt: -1 });
 
         totalItems = await courseModel.countDocuments({ userId: user?._id });
@@ -165,14 +163,11 @@ export class CourseController {
       const getAffiliateRole = user?.roles?.find((item) => item === USER_ROLES.TRAINING_AFFILIATE);
 
       if (getAffiliateRole) {
-        const { duration, format } = req.body;
-
         data = await courseModel.findOneAndUpdate(
           { $and: [{ _id: id }, { userId: user?._id }] },
           {
             $set: {
               ...req.body,
-              duration: `${duration} ${format}`,
             },
           },
           { new: true }

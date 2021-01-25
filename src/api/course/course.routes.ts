@@ -137,6 +137,11 @@ const courseRouter = express.Router();
  *         in: body
  *         required: true
  *         type: string
+ *       - name: price
+ *         description: price
+ *         in: body
+ *         required: true
+ *         type: string
  *     responses:
  *       201:
  *         description: Registered
@@ -225,6 +230,11 @@ courseRouter.post(
  *         type: string
  *       - name: description
  *         description: description
+ *         in: body
+ *         required: true
+ *         type: string
+ *       - name: price
+ *         description: price
  *         in: body
  *         required: true
  *         type: string

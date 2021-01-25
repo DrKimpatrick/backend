@@ -64,6 +64,7 @@ const addCourse = {
   level: SKILL_LEVEL.BEGINNER,
   duration: 5,
   format: CourseTimeFormat.Hour,
+  price: 5,
 };
 
 const addUser = (role: string) => {

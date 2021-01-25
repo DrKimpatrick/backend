@@ -11,4 +11,6 @@ export interface ICourse extends Document {
   level: string;
   description: string;
   duration: string;
+  format: string;
+  price: string;
 }

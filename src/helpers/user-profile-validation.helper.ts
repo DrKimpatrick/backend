@@ -222,6 +222,9 @@ export const courseValidator = () => [
   body('format')
     .isIn(Object.values(CourseTimeFormat))
     .withMessage('time format must be either in min or hrs'),
+
+  body('price').notEmpty().withMessage('price is required'),
+  body('price').isNumeric().withMessage('price must be a number'),
 ];
 
 export const verificationStatusRule = () => {

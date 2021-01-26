@@ -15,6 +15,7 @@ describe('User /users', () => {
   const skillModel = ModelFactory.getModel(MODELS.SKILL);
   const courseModel = ModelFactory.getModel(MODELS.COURSE);
   const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
+  const userCouponModel = ModelFactory.getModel(MODELS.USER_COUPON);
 
   let token: any;
   let user: any;
@@ -37,6 +38,7 @@ describe('User /users', () => {
     await skillModel.deleteMany({});
     await courseModel.deleteMany({});
     await userSkillsModel.deleteMany({});
+    await userCouponModel.deleteMany({});
   });
 
   describe('PATCH /users/:id', () => {
@@ -278,8 +280,8 @@ describe('User /users', () => {
     });
   });
 
-  describe('GET /users/talent?skills=id,id&subscript=basic|standard|premium', () => {
-    it('should successfully search talent based on skills and subscription', async (done) => {
+  describe('GET based skillIds or search skills /users/talent?skills=id,id&subscript=basic|standard|premium', () => {
+    it('should successfully search talent based on skills and subscription for super admin', async (done) => {
       const skill = await skillModel.create({ skill: 'Javascript' });
       const newUser = await userM.create({
         email: 'test@gmail.com',
@@ -299,6 +301,40 @@ describe('User /users', () => {
       );
       supertest(app)
         .get(`/api/v1/users/talent?skills=${skill._id}&subscription=basic`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          expect(res.status).toBe(STATUS_CODES.OK);
+          expect(res.body).toHaveProperty('data');
+          done();
+        });
+    });
+
+    it('should fetch talents based on searched skills', async (done) => {
+      const skill = await skillModel.create({ skill: 'Javascript' });
+      const newUser = await userM.create({
+        email: 'test@gmail.com',
+        username: 'usernametest',
+        password: '@Spassword12',
+        roles: 'talent',
+        couponUsed: 'xCouponID',
+      });
+      await userSkillsModel.create({ skill: skill._id, user: newUser._id });
+
+      user = await userM.findByIdAndUpdate(
+        user.id,
+        {
+          // @ts-ignore
+          $push: { roles: [USER_ROLES.RECRUITMENT_ADMIN] },
+        },
+        { new: true }
+      );
+      await userCouponModel.create({
+        coupon: newUser.couponUsed,
+        issuer: user._id,
+        $push: { usedBy: [newUser._id] },
+      });
+      supertest(app)
+        .get(`/api/v1/users/talent?searchSkillKey=java`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
           expect(res.status).toBe(STATUS_CODES.OK);
@@ -348,16 +384,23 @@ describe('User /users', () => {
         username: 'usernametest',
         password: '@Spassword12',
         roles: 'talent',
+        couponUsed: 'xCouponID',
       });
-      await userM.findByIdAndUpdate(newUser.id, { $push: { skills: skill._id } }, { new: true });
+      await userSkillsModel.create({ skill: skill._id, user: newUser._id });
+
       user = await userM.findByIdAndUpdate(
         user.id,
         {
           // @ts-ignore
-          $push: { roles: [USER_ROLES.COMPANY_ADMIN] },
+          $push: { roles: [USER_ROLES.RECRUITMENT_ADMIN] },
         },
         { new: true }
       );
+      await userCouponModel.create({
+        coupon: newUser.couponUsed,
+        issuer: user._id,
+        $push: { usedBy: [newUser._id] },
+      });
       supertest(app)
         .get(`/api/v1/users/talent?subscription=basic`)
         .set('Authorization', `Bearer ${token}`)

@@ -14,6 +14,7 @@ export default interface IUser extends Document {
   verified?: boolean;
   featureChoice?: string;
   paymentStatus?: PAYMENT_STATUS;
+  couponUsed?: string;
   skills?: string[];
   employmentHistory?: string[];
   educationHistory?: string[];
@@ -27,6 +28,7 @@ export default interface IUser extends Document {
   profilePicture?: string;
   paypalEmail?: string;
   linkToPlatform?: string;
+  userCouponDetails?: any[];
 }
 
 export interface IUserCoupon extends Document {

@@ -149,6 +149,11 @@ const userSchema = new Schema(
 
 userSchema.virtual('name').get(getUserFullName);
 userSchema.virtual('isSuperAdmin').get(isSuperAdmin);
+userSchema.virtual('userCouponDetails', {
+  ref: 'UserCoupon',
+  localField: 'couponUsed',
+  foreignField: 'coupon',
+});
 
 userSchema.pre('save', saveUser);
 

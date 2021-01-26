@@ -328,7 +328,19 @@ userRouter.patch('/:id', validate(userProfileRules()), userController.profileEdi
  *              schema:
  *                $ref: '#definitions/ValidationError'
  */
-userRouter.get('/:id', requireRoles([USER_ROLES.SUPER_ADMIN]), userController.getUser);
+userRouter.get(
+  '/:id',
+  requireRoles(
+    [
+      USER_ROLES.SUPER_ADMIN,
+      USER_ROLES.RECRUITMENT_ADMIN,
+      USER_ROLES.HR_ADMIN,
+      USER_ROLES.COMPANY_ADMIN,
+    ],
+    false
+  ),
+  userController.getUser
+);
 
 /**
  * @swagger
@@ -427,7 +439,15 @@ userRouter.post('/beta-testers', validate(newBetaTesterRules()), userController.
  */
 userRouter.get(
   '/:userId/skills',
-  requireRoles([USER_ROLES.SUPER_ADMIN], false),
+  requireRoles(
+    [
+      USER_ROLES.SUPER_ADMIN,
+      USER_ROLES.RECRUITMENT_ADMIN,
+      USER_ROLES.HR_ADMIN,
+      USER_ROLES.COMPANY_ADMIN,
+    ],
+    false
+  ),
   userController.fetchUserSkillsByUserId
 );
 

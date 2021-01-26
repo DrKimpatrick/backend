@@ -99,6 +99,12 @@ export class UserController {
           .exec();
       }
 
+      if (user && !user.roles?.includes(USER_ROLES.TALENT) && !req.currentUser?.isSuperAdmin) {
+        return next(
+          new HttpError(STATUS_CODES.UNAUTHORIZED, 'You are not authorized to view this profile')
+        );
+      }
+
       return res.json({ profile: user });
     } catch (e) {
       return next(
@@ -212,37 +218,99 @@ export class UserController {
   };
 
   getTalents = async (req: Request, res: Response, next: NextFunction) => {
-    const skills = req.query.skills as string;
-    const { subscription } = req.query;
     try {
-      let condition = {};
-      if (skills && subscription) {
-        condition = { featureChoice: subscription };
-      }
+      const skills = req.query.skills as string;
+      const subscription = req.query.subscription as string;
+      const { searchSkillKey } = req.query;
+      const isSuperAdmin = req.currentUser?.isSuperAdmin;
+
       const userModel = ModelFactory.getModel(MODELS.USER);
-      const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
-      let talents = [];
+      const couponModel = ModelFactory.getModel(MODELS.USER_COUPON);
+
+      let skillIds = [];
+      let subscriptions: string[] = [];
+
       if (skills) {
-        const skillIds = skills.split(',');
+        skillIds = skills.split(',');
+      }
+
+      if (subscription) {
+        subscriptions = subscription.split(',');
+      }
+
+      if (searchSkillKey) {
+        const skillModel = ModelFactory.getModel(MODELS.SKILL);
+        const data = await skillModel
+          .find({ skill: { $regex: searchSkillKey, $options: 'i' } })
+          .select('_id')
+          .exec();
+        if (Array.isArray(data) && data.length) {
+          skillIds = data.map((skill) => skill._id.toString());
+        }
+      }
+
+      let subscriptionCondition = {};
+
+      if (skillIds.length && subscriptions.length) {
+        subscriptionCondition = { featureChoice: { $in: subscriptions } };
+      }
+
+      let couponIssuerCondition = {};
+
+      if (!isSuperAdmin) {
+        couponIssuerCondition = { issuer: req.currentUser?.id.toString() };
+      }
+
+      let talents = [];
+
+      if (skillIds.length) {
+        const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
         const userSkills = await userSkillsModel
           .find({ skill: { $in: skillIds } })
           .populate({
             path: 'user',
             match: {
               roles: { $in: [USER_ROLES.TALENT] },
-              ...condition,
+              ...subscriptionCondition,
+            },
+            populate: {
+              path: 'userCouponDetails',
+              model: couponModel,
+              match: {
+                ...couponIssuerCondition,
+              },
+              select: 'issuer coupon',
             },
           })
           .exec();
-        talents = userSkills.map((x: Record<string, unknown>) => x.user).filter((x) => !!x);
+        talents = isSuperAdmin
+          ? userSkills.map((x: Record<string, unknown>) => x.user).filter((x) => !!x)
+          : userSkills
+              .map((x: Record<string, User>) => x.user)
+              .filter((x) => !!x && x.userCouponDetails?.length);
       }
-      if (subscription && !skills) {
+
+      if (subscriptions.length && !skills && !searchSkillKey) {
         talents = await userModel
-          .find({ featureChoice: subscription, roles: [USER_ROLES.TALENT] })
+          .find({ featureChoice: { $in: subscriptions }, roles: [USER_ROLES.TALENT] })
+          .populate({
+            path: 'userCouponDetails',
+            model: couponModel,
+            match: {
+              ...couponIssuerCondition,
+            },
+            select: 'issuer coupon',
+          })
           .exec();
+        if (!isSuperAdmin) {
+          talents = talents.filter(
+            (x) => Array.isArray(x.userCouponDetails) && x.userCouponDetails?.length
+          );
+        }
       }
-      if (talents.length === 0) {
-        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'No users found'));
+
+      if (!talents.length) {
+        return next(new HttpError(STATUS_CODES.NOT_FOUND, 'No talent users found'));
       }
       return res.json({ data: talents });
     } catch (error) {

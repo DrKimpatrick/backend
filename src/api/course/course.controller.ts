@@ -230,6 +230,61 @@ export class CourseController {
       );
     }
   };
+
+  groupNumberOfCourseByOwner = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      let query;
+
+      const condition = [
+        { $group: { _id: '$userId', count: { $sum: 1 }, users: { $push: '$userId' } } },
+        { $lookup: { from: 'users', foreignField: '_id', localField: '_id', as: 'users' } },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            'users._id': 1,
+            'users.username': 1,
+            'users.profilePicture': 1,
+          },
+        },
+      ];
+
+      const { limit, page } = req.query;
+
+      if (limit && page) {
+        const pageSize = Number(limit);
+
+        const currentPage = Number(page);
+
+        const skip = currentPage > 0 ? (currentPage - 1) * pageSize : 1;
+
+        query = [...condition, { $skip: skip }, { $limit: pageSize }];
+      } else {
+        query = condition;
+      }
+
+      const find = await courseModel.aggregate(query);
+
+      const totalDocs = await courseModel.aggregate(condition).count('totalDocs');
+
+      return res.status(STATUS_CODES.OK).json({
+        data: find,
+        totalDocs: totalDocs && totalDocs.length > 0 ? totalDocs[0].totalDocs : 0,
+        limit: Number(limit) || 0,
+        currentPage: Number(page) || 0,
+      });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch training due to internal server error',
+          error
+        )
+      );
+    }
+  };
 }
 
 export default new CourseController();

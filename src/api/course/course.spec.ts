@@ -180,4 +180,23 @@ describe('Courses', () => {
       expect(course.body).toHaveProperty('totalItems');
     });
   });
+
+  describe('GET /List total number of courses by owner', () => {
+    beforeEach(async () => {
+      const newUser = await userM.create(addUser(USER_ROLES.TALENT));
+
+      token = newUser.toAuthJSON().token;
+    });
+    it('should get total number of courses grouped by owner', async () => {
+      const course = await supertest(app)
+        .get(`/api/v1/courses/group/owner`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(course.status).toEqual(STATUS_CODES.OK);
+
+      expect(typeof course.status).toEqual('number');
+
+      expect(course.body).toHaveProperty('data');
+    });
+  });
 });

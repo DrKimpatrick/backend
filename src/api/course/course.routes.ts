@@ -376,4 +376,47 @@ courseRouter.get(
   courseController.listCoursesByStatus
 );
 
+/**
+ * @swagger
+ * /api/v1/courses/owner:
+ *   get:
+ *     summary: Fetch number of courses added by the course owner
+ *     tags: [Courses]
+ *     description: Fetch all courses by status
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: id
+ *                 count:
+ *                  type: string
+ *                  description: 34
+ *                 users:
+ *                  type: array
+ *                  items:
+ *                    type: object
+ *                    properties:
+ *                      _id:
+ *                        type: string
+ *                      username:
+ *                        type: string
+ *                      profilePicture:
+ *                        type: string
+ *
+ *
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+courseRouter.get('/group/owner', courseController.groupNumberOfCourseByOwner);
+
 export { courseRouter };

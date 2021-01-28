@@ -3,6 +3,7 @@ import { ModelFactory } from '../../models/model.factory';
 import { COURSE_VERIFICATION_STATUS, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { ICourse } from '../../models/interfaces/course.interface';
 import { HttpError } from '../../helpers/error.helpers';
+import { getPagination } from '../../helpers';
 
 /**
  * @function CourseController
@@ -238,6 +239,7 @@ export class CourseController {
       let query;
 
       const condition = [
+        { $match: { verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED } },
         { $group: { _id: '$userId', count: { $sum: 1 }, users: { $push: '$userId' } } },
         { $lookup: { from: 'users', foreignField: '_id', localField: '_id', as: 'users' } },
         {
@@ -280,6 +282,44 @@ export class CourseController {
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
           'Unable to fetch training due to internal server error',
+          error
+        )
+      );
+    }
+  };
+
+  listCourseOfAffiliateUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+
+      const condition = {
+        $and: [{ userId: id }, { verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED }],
+      };
+
+      if (req.query.limit && req.query.page) {
+        const { limit, page, totalDocs, offset } = await getPagination(req, courseModel, condition);
+
+        const find = await courseModel
+          .find(condition)
+          .limit(limit)
+          .skip(offset)
+          .populate('userId', '_id username profilePicture bio');
+
+        return res.json({ data: find, totalDocs, currentPage: page });
+      }
+
+      const find = await courseModel
+        .find(condition)
+        .populate('userId', '_id username profilePicture bio');
+
+      return res.json({ data: find, totalDocs: find.length, currentPage: 1 });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch courses due to internal server error',
           error
         )
       );

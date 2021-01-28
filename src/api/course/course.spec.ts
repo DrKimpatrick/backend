@@ -199,4 +199,27 @@ describe('Courses', () => {
       expect(course.body).toHaveProperty('data');
     });
   });
+
+  describe('GET /List courses of affiliate user', () => {
+    let affiliateUser: any;
+
+    beforeEach(async () => {
+      const newUser = await userM.create(addUser(USER_ROLES.TRAINING_AFFILIATE));
+
+      affiliateUser = newUser;
+
+      token = newUser.toAuthJSON().token;
+    });
+    it('should get courses of affiliate user', async () => {
+      const course = await supertest(app)
+        .get(`/api/v1/courses/affiliate/${affiliateUser._id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(course.status).toEqual(STATUS_CODES.OK);
+
+      expect(typeof course.status).toEqual('number');
+
+      expect(course.body).toHaveProperty('data');
+    });
+  });
 });

@@ -419,4 +419,34 @@ courseRouter.get(
  */
 courseRouter.get('/group/owner', courseController.groupNumberOfCourseByOwner);
 
+/**
+ * @swagger
+ * /api/v1/courses/affiliate/:id:
+ *   get:
+ *     summary: Fetch all courses of affiliate user
+ *     tags: [Courses]
+ *     description: Fetch all courses of affiliate user
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/CourseResponse'
+ *
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+courseRouter.get('/affiliate/:id', courseController.listCourseOfAffiliateUser);
+
 export { courseRouter };

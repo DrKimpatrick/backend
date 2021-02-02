@@ -4,6 +4,7 @@ import { COURSE_VERIFICATION_STATUS, MODELS, STATUS_CODES, USER_ROLES } from '..
 import { ICourse } from '../../models/interfaces/course.interface';
 import { HttpError } from '../../helpers/error.helpers';
 import { getPagination } from '../../helpers';
+import stripeController from '../stripe/stripe.controller';
 
 /**
  * @function CourseController
@@ -155,16 +156,16 @@ export class CourseController {
     try {
       const { id } = req.params;
 
-      let data: ICourse;
+      let course: ICourse | null;
 
       const user = req.currentUser;
 
-      const courseModel = ModelFactory.getModel(MODELS.COURSE);
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
 
       const getAffiliateRole = user?.roles?.find((item) => item === USER_ROLES.TRAINING_AFFILIATE);
 
       if (getAffiliateRole) {
-        data = await courseModel.findOneAndUpdate(
+        course = await courseModel.findOneAndUpdate(
           { $and: [{ _id: id }, { userId: user?._id }] },
           {
             $set: {
@@ -173,17 +174,38 @@ export class CourseController {
           },
           { new: true }
         );
-      } else {
-        data = await courseModel.findOneAndUpdate(
+
+        return res.status(STATUS_CODES.OK).json({
+          message: course ? 'course updated successfully' : 'failed to update course',
+          data: course,
+        });
+      }
+
+      const { verificationStatus } = req.body;
+
+      course = await courseModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { verificationStatus } },
+        { new: true }
+      );
+
+      if (course && verificationStatus === COURSE_VERIFICATION_STATUS.ACCEPTED) {
+        const result = await stripeController.createAffiliateProduct(course);
+        course = await courseModel.findOneAndUpdate(
           { _id: id },
-          { $set: { verificationStatus: req.body.verificationStatus } },
+          {
+            $set: {
+              stripeInfo: { productId: result?.course.id || '', priceId: result?.price.id || '' },
+            },
+          },
           { new: true }
         );
       }
 
-      return res
-        .status(STATUS_CODES.OK)
-        .json({ message: data ? 'course updated successfully' : 'failed to update course', data });
+      return res.status(STATUS_CODES.OK).json({
+        message: course ? 'course updated successfully' : 'failed to update course',
+        data: course,
+      });
     } catch (error) {
       return next(
         new HttpError(

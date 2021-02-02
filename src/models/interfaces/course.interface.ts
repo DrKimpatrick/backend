@@ -13,4 +13,10 @@ export interface ICourse extends Document {
   duration: string;
   format: string;
   price: string;
+  userId: string;
+  billing: 'one-time' | 'day' | 'week' | 'month' | 'year';
+  stripeInfo: {
+    productId: String;
+    priceId: String;
+  };
 }

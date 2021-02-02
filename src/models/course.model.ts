@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { COURSE_VERIFICATION_STATUS, SKILL_LEVEL } from '../constants';
+import { COURSE_BILLING_OPTIONS, COURSE_VERIFICATION_STATUS, SKILL_LEVEL } from '../constants';
 import { ICourse } from './interfaces/course.interface';
 
 const { Schema } = mongoose;
@@ -67,6 +67,16 @@ export const courseSchema = new Schema(
     price: {
       type: String,
       required: true,
+    },
+    billing: {
+      type: String,
+      required: true,
+      enum: Object.values(COURSE_BILLING_OPTIONS),
+    },
+    stripeInfo: {
+      productId: String,
+      priceId: String,
+      required: false,
     },
   },
   { timestamps: true }

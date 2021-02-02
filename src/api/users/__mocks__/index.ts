@@ -65,6 +65,7 @@ const addCourse = {
   duration: 5,
   format: CourseTimeFormat.Hour,
   price: 5,
+  billing: 'one-time',
 };
 
 const addUser = (role: string) => {

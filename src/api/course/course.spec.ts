@@ -14,7 +14,6 @@ describe('Courses', () => {
 
   beforeEach(async () => {
     user = await userM.create(addUser(USER_ROLES.TRAINING_AFFILIATE));
-
     token = user.toAuthJSON().token;
   });
 
@@ -26,7 +25,6 @@ describe('Courses', () => {
         .send(addCourse);
 
       expect(newCourse.status).toEqual(STATUS_CODES.CREATED);
-
       expect(typeof newCourse.status).toEqual('number');
     });
 
@@ -52,9 +50,7 @@ describe('Courses', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(course.status).toEqual(STATUS_CODES.OK);
-
       expect(typeof course.status).toEqual('number');
-
       expect(course.body).toHaveProperty('data');
     });
   });
@@ -130,13 +126,12 @@ describe('Courses', () => {
   describe('Update Course', () => {
     beforeEach(async () => {
       const newUser = await userM.create(addUser(USER_ROLES.SUPER_ADMIN));
-
       const newCourse = await courseModel.create({ ...addCourse, userId: newUser._id });
 
       token = newUser.toAuthJSON().token;
-
       courseId = newCourse._id;
     });
+
     it('should update course', async () => {
       const course = await supertest(app)
         .put(`/api/v1/courses/${courseId}`)
@@ -144,9 +139,7 @@ describe('Courses', () => {
         .send(addCourse);
 
       expect(course.status).toEqual(STATUS_CODES.OK);
-
       expect(typeof course.status).toEqual('number');
-
       expect(course.body).toHaveProperty('message');
     });
 

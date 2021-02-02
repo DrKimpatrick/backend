@@ -10,6 +10,7 @@ import {
   AdminsProcess,
   CourseTimeFormat,
   AffiliateProcess,
+  COURSE_BILLING_OPTIONS,
 } from '../constants';
 
 export const validateArrayOfStrings = (val: string[]) => {
@@ -225,6 +226,10 @@ export const courseValidator = () => [
 
   body('price').notEmpty().withMessage('price is required'),
   body('price').isNumeric().withMessage('price must be a number'),
+  body('billing')
+    .notEmpty()
+    .isIn(Object.values(COURSE_BILLING_OPTIONS))
+    .withMessage('billing should be one-time, day, week, month, or year'),
 ];
 
 export const verificationStatusRule = () => {

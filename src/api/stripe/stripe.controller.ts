@@ -7,6 +7,7 @@ import {
   MODELS,
   PAYMENT_STATUS,
   PRODUCT_PLANS,
+  AFFILIATE_PRODUCT_PREFIX,
   STATUS_CODES,
   USER_ROLES,
 } from '../../constants';
@@ -16,38 +17,16 @@ import { ModelFactory } from '../../models/model.factory';
 import { Subsidy } from '../../interfaces';
 import { sendEmail } from '../../config/sendgrid';
 import { getEmailTemplate } from '../../shared/email.templates';
-
-const stripe = new Stripe(environment.stripeApiKey, {
-  apiVersion: '2020-08-27',
-});
+import { ICourse } from '../../models/interfaces/course.interface';
 
 export class StripeController {
-  getOrCreateCustomer = async (
-    customerInfo: Record<string, undefined>,
-    paymentMethodId?: string
-  ): Promise<Stripe.Customer> => {
-    let customer: Stripe.Customer;
+  private stripe: Stripe;
 
-    const customers = await stripe.customers.list({
-      email: customerInfo.email,
-      expand: ['data.subscriptions', 'data.sources'],
+  constructor() {
+    this.stripe = new Stripe(environment.stripeApiKey, {
+      apiVersion: '2020-08-27',
     });
-    if (customers?.data.length === 0) {
-      // no customer found, create one
-      customer = await stripe.customers.create({
-        payment_method: paymentMethodId,
-        email: customerInfo.email,
-        name: customerInfo.name,
-        invoice_settings: {
-          default_payment_method: paymentMethodId,
-        },
-        expand: ['subscriptions', 'sources'],
-      });
-    } else {
-      [customer] = customers.data;
-    }
-    return customer;
-  };
+  }
 
   handleSubscription = async (req: Request, res: Response, next: NextFunction) => {
     const userRoles = req.currentUser?.roles;
@@ -77,7 +56,7 @@ export class StripeController {
       const userId = req.currentUser?._id;
       const customer = await this.getOrCreateCustomer(customerInfo, paymentMethodId);
 
-      const subscription = await stripe.subscriptions.create({
+      const subscription = await this.stripe.subscriptions.create({
         customer: customer.id,
         coupon,
         items: [
@@ -100,7 +79,7 @@ export class StripeController {
         .exec();
 
       if (coupon) {
-        const cpn = await stripe.coupons.retrieve(coupon);
+        const cpn = await this.stripe.coupons.retrieve(coupon);
         if (cpn) {
           const userCouponModel = ModelFactory.getModel<IUserCoupon>(MODELS.USER_COUPON);
           await userCouponModel
@@ -137,9 +116,9 @@ export class StripeController {
       const userId = req.currentUser?._id;
       const customer = await this.getOrCreateCustomer(customerInfo, paymentMethodId);
 
-      const plan = await stripe.plans.retrieve(subsidy.planId, { expand: ['tiers'] });
+      const plan = await this.stripe.plans.retrieve(subsidy.planId, { expand: ['tiers'] });
 
-      const coupon = await stripe.coupons.create({
+      const coupon = await this.stripe.coupons.create({
         currency: plan.currency,
         amount_off: subsidy.tier.unit_amount as number,
         max_redemptions: subsidy.quantity,
@@ -147,7 +126,7 @@ export class StripeController {
         metadata: { plan: plan.id, email: customerInfo.email, issuer: userId.toString() },
       });
 
-      const subscription = await stripe.subscriptions.create({
+      const subscription = await this.stripe.subscriptions.create({
         customer: customer.id,
         coupon: coupon.id,
         items: [
@@ -212,16 +191,19 @@ export class StripeController {
     try {
       const ADMIN_PRODUCT_NAME = 'admin subsidies';
 
-      const stripeProducts = await stripe.products.list({ active: true });
-      let plans = await stripe.plans.list({ active: true, expand: ['data.tiers'] });
+      const stripeProducts = await this.stripe.products.list({ active: true });
+      let plans = await this.stripe.plans.list({ active: true, expand: ['data.tiers'] });
 
       plans = this.formatPlans(plans.data);
       let products = this.formatProducts(stripeProducts.data);
       products = this.attachPlansToProducts(plans, products);
 
       return res.status(STATUS_CODES.OK).json({
-        products: products.filter((p: any) => p.name.toLowerCase() !== ADMIN_PRODUCT_NAME),
-        adminProducts: products.filter((p: any) => p.name.toLowerCase() === ADMIN_PRODUCT_NAME),
+        products: products.filter((p) => p.name.toLowerCase() !== ADMIN_PRODUCT_NAME),
+        adminProducts: products.filter((p) => p.name.toLowerCase() === ADMIN_PRODUCT_NAME),
+        affiliateProducts: products.filter((p) =>
+          p.metadata?.name.startsWith(AFFILIATE_PRODUCT_PREFIX)
+        ),
       });
     } catch (error) {
       return next(
@@ -248,9 +230,31 @@ export class StripeController {
     }
   };
 
-  formatUSD = (stripeAmount: number) => `$${(stripeAmount / 100).toFixed(2)}`;
+  async createAffiliateProduct(courseData: ICourse) {
+    // Don't continue if product exists already
+    if (courseData.stripeInfo.productId || courseData.stripeInfo.priceId) return;
 
-  private formatProducts(products: any) {
+    const course = await this.stripe.products.create({
+      name: courseData.name,
+      description: courseData.description,
+      metadata: {
+        name: `${AFFILIATE_PRODUCT_PREFIX}${courseData.name}`,
+      },
+    });
+
+    const price = await this.stripe.prices.create({
+      currency: 'usd',
+      product: course.id,
+      unit_amount: parseInt(courseData.price, 10),
+      ...(courseData.billing !== 'one-time' ? { recurring: { interval: courseData.billing } } : {}),
+    });
+
+    return { course, price };
+  }
+
+  private formatUSD = (stripeAmount: number) => `$${(stripeAmount / 100).toFixed(2)}`;
+
+  private formatProducts(products: any): Stripe.Product[] {
     products.forEach((product: any) => {
       const [features] = PRODUCT_PLANS.filter((productPlan) => productPlan.name === product.name);
       product.productDetails = features;
@@ -259,7 +263,7 @@ export class StripeController {
     return products;
   }
 
-  private attachPlansToProducts(plans: any, products: any) {
+  private attachPlansToProducts(plans: any, products: any): Stripe.Product[] {
     products.forEach((product: any) => {
       product.plans = plans.filter((plan: any) => product.id === plan.product);
     });
@@ -277,6 +281,33 @@ export class StripeController {
     });
     return plans;
   }
+
+  private getOrCreateCustomer = async (
+    customerInfo: Record<string, undefined>,
+    paymentMethodId?: string
+  ): Promise<Stripe.Customer> => {
+    let customer: Stripe.Customer;
+
+    const customers = await this.stripe.customers.list({
+      email: customerInfo.email,
+      expand: ['data.subscriptions', 'data.sources'],
+    });
+    if (customers?.data.length === 0) {
+      // no customer found, create one
+      customer = await this.stripe.customers.create({
+        payment_method: paymentMethodId,
+        email: customerInfo.email,
+        name: customerInfo.name,
+        invoice_settings: {
+          default_payment_method: paymentMethodId,
+        },
+        expand: ['subscriptions', 'sources'],
+      });
+    } else {
+      [customer] = customers.data;
+    }
+    return customer;
+  };
 }
 
 export default new StripeController();

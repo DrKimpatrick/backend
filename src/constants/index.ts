@@ -209,3 +209,13 @@ export enum CourseTimeFormat {
   Minute = 'Min',
   Hour = 'Hr',
 }
+
+export enum COURSE_BILLING_OPTIONS {
+  ONE_TIME = 'one-time',
+  DAILY = 'day',
+  WEEKLY = 'week',
+  MONTHLY = 'month',
+  YEARLY = 'year',
+}
+
+export const AFFILIATE_PRODUCT_PREFIX = 'affiliate_';

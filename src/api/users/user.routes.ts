@@ -328,19 +328,7 @@ userRouter.patch('/:id', validate(userProfileRules()), userController.profileEdi
  *              schema:
  *                $ref: '#definitions/ValidationError'
  */
-userRouter.get(
-  '/:id',
-  requireRoles(
-    [
-      USER_ROLES.SUPER_ADMIN,
-      USER_ROLES.RECRUITMENT_ADMIN,
-      USER_ROLES.HR_ADMIN,
-      USER_ROLES.COMPANY_ADMIN,
-    ],
-    false
-  ),
-  userController.getUser
-);
+userRouter.get('/:id', userController.getUser);
 
 /**
  * @swagger
@@ -497,5 +485,40 @@ userRouter.post(
   multer({ storage: cloudinaryStorage() }).array('images'),
   userController.uploadImage
 );
+
+/**
+ * @swagger
+ * /api/v1/users/list/recommendation:
+ *   get:
+ *     summary: Retrieve all recommended users
+ *     tags: [Users]
+ *     description: Retrieve all recommended users
+ *
+ *     responses:
+ *       200:
+ *         description: ok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserProfile'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/list/recommendation', userController.getRecommendedUser);
 
 export { userRouter };

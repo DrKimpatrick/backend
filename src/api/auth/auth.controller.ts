@@ -10,7 +10,11 @@ import { MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { ModelFactory } from '../../models/model.factory';
 import { Email, sendEmail } from '../../config/sendgrid';
 import { getEmailTemplate } from '../../shared/email.templates';
-import { generateAccessToken, generateVerificationToken } from '../../helpers/auth.helpers';
+import {
+  generateAccessToken,
+  generateVerificationToken,
+  decryptText,
+} from '../../helpers/auth.helpers';
 import { logger } from '../../shared/winston';
 import { BaseTokenPayload } from '../../interfaces';
 import { generateJWTToken } from '../../helpers';
@@ -58,11 +62,24 @@ export class AuthController {
     try {
       const { username, email, password } = req.body;
 
+      const reference = req.query.reference as string;
+
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
 
       const newUser = { username, email, password };
 
       const user = await userModel.create(newUser);
+
+      if (reference) {
+        const decrypt = decryptText(reference);
+
+        const find = await userModel.findOne({ _id: decrypt });
+
+        if (find) {
+          // update user
+          await userModel.update({ _id: user.id }, { $set: { recommendedBy: find._id } });
+        }
+      }
 
       const confirmationToken = generateVerificationToken(user.id);
 

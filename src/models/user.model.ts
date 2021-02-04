@@ -143,6 +143,17 @@ const userSchema = new Schema(
       required: false,
       default: null,
     },
+    sharedLink: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    recommendedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+      default: null,
+    },
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

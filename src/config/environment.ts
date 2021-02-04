@@ -25,6 +25,8 @@ const environment = {
   cloudinaryName: process.env.CLOUDINARY_NAME || '',
   sendgridApiKey: process.env.SENDGRID_API_KEY || '',
   sendgridUsername: process.env.SENDGRID_USERNAME || '',
+  cryptoAlgorithm: process.env.CRYPTO_ALGORITHM || '',
+  registerUrlFrontend: process.env.REGISTER_URL_FRONTEND || '',
 };
 
 if (environment.env === 'test') {

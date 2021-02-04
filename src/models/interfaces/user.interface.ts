@@ -29,6 +29,8 @@ export default interface IUser extends Document {
   paypalEmail?: string;
   linkToPlatform?: string;
   userCouponDetails?: any[];
+  sharedLink?: string;
+  recommendedBy?: string;
 }
 
 export interface IUserCoupon extends Document {

@@ -518,4 +518,16 @@ describe('User /users', () => {
       expect(res.status).toEqual(STATUS_CODES.BAD_REQUEST);
     });
   });
+
+  describe('recommendation', () => {
+    it('should list recommended user', async () => {
+      const res = await supertest(app)
+        .get('/api/v1/users/list/recommendation')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('data');
+    });
+  });
 });

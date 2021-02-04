@@ -1,5 +1,6 @@
 import jsonwebtoken from 'jsonwebtoken';
 import { Request } from 'express';
+import crypto from 'crypto';
 import { environment } from '../config/environment';
 import { USER_ROLES } from '../constants';
 import { DecodeTokenType } from '../interfaces';
@@ -53,4 +54,40 @@ export const getTokenFromRequest = (req: Request, inBody = false) => {
     return authorization.split(' ')[1];
   }
   return null;
+};
+
+export const encryptText = (value: string): string => {
+  const { cryptoAlgorithm, secretKey } = environment;
+
+  // Initialization vector
+  const iv = Buffer.alloc(16, 0);
+
+  // generate key length
+  const key = crypto.scryptSync(secretKey, 'salt', 24);
+
+  const cipher = crypto.createCipheriv(cryptoAlgorithm, key, iv);
+
+  let encrypted = cipher.update(value, 'utf8', 'hex');
+
+  encrypted += cipher.final('hex');
+
+  return encrypted;
+};
+
+export const decryptText = (value: string) => {
+  const { cryptoAlgorithm, secretKey } = environment;
+
+  // Initialization vector
+  const iv = Buffer.alloc(16, 0);
+
+  // generate key length
+  const key = crypto.scryptSync(secretKey, 'salt', 24);
+
+  const decipher = crypto.createDecipheriv(cryptoAlgorithm, key, iv);
+
+  let decrypted = decipher.update(value, 'hex', 'utf8');
+
+  decrypted += decipher.final('utf8');
+
+  return decrypted;
 };

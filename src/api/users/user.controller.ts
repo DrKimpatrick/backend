@@ -6,6 +6,8 @@ import { createSkills } from '../skills/skills.controller';
 import { getPagination } from '../../helpers';
 import User from '../../models/interfaces/user.interface';
 import { HttpError } from '../../helpers/error.helpers';
+import { encryptText } from '../../helpers/auth.helpers';
+import { environment } from '../../config/environment';
 
 /**
  * @function UserController
@@ -99,12 +101,6 @@ export class UserController {
           .exec();
       }
 
-      if (user && !user.roles?.includes(USER_ROLES.TALENT) && !req.currentUser?.isSuperAdmin) {
-        return next(
-          new HttpError(STATUS_CODES.UNAUTHORIZED, 'You are not authorized to view this profile')
-        );
-      }
-
       return res.json({ profile: user });
     } catch (e) {
       return next(
@@ -149,6 +145,16 @@ export class UserController {
       const setUpdate: any = {};
       if (roles) {
         setUpdate.roles = roles;
+
+        if (
+          !roles.includes(String(USER_ROLES.TRAINING_AFFILIATE)) &&
+          !roles.includes(String(USER_ROLES.TRAINNING_ADMIN)) &&
+          !roles.includes(String(USER_ROLES.SUPER_ADMIN))
+        ) {
+          const encrypt = encryptText(userId);
+
+          setUpdate.sharedLink = `${environment.registerUrlFrontend}?reference=${encrypt}`;
+        }
       }
 
       delete req.body?.roles;
@@ -352,6 +358,25 @@ export class UserController {
     } catch (error) {
       return next(
         new HttpError(STATUS_CODES.SERVER_ERROR, 'Failed to upload due to internal server error')
+      );
+    }
+  };
+
+  getRecommendedUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.currentUser?._id;
+
+      const userModel = ModelFactory.getModel(MODELS.USER);
+
+      const find = await userModel.find({ recommendedBy: id }).sort({ updatedAt: -1 });
+
+      return res.json({ data: find });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable perform action due to internal server error'
+        )
       );
     }
   };

@@ -28,6 +28,9 @@ jobs:
       SOCIAL_AUTH_REDIRECT_URL: ${{ secrets.SOCIAL_AUTH_REDIRECT_URL }}
       BASE_URL: ${{ secrets.BASE_URL }}
       STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+      CRYPTO_ALGORITHM: ${{ secrets.CRYPTO_ALGORITHM }}
+      REGISTER_URL_FRONTEND: ${{ secrets.REGISTER_URL_FRONTEND }}
+
 
     services:
       mongodb:

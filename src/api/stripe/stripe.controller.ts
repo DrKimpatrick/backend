@@ -202,7 +202,7 @@ export class StripeController {
         products: products.filter((p) => p.name.toLowerCase() !== ADMIN_PRODUCT_NAME),
         adminProducts: products.filter((p) => p.name.toLowerCase() === ADMIN_PRODUCT_NAME),
         affiliateProducts: products.filter((p) =>
-          p.metadata?.name.startsWith(AFFILIATE_PRODUCT_PREFIX)
+          p.metadata?.name?.startsWith(AFFILIATE_PRODUCT_PREFIX)
         ),
       });
     } catch (error) {
@@ -292,6 +292,7 @@ export class StripeController {
       email: customerInfo.email,
       expand: ['data.subscriptions', 'data.sources'],
     });
+
     if (customers?.data.length === 0) {
       // no customer found, create one
       customer = await this.stripe.customers.create({
@@ -306,6 +307,7 @@ export class StripeController {
     } else {
       [customer] = customers.data;
     }
+
     return customer;
   };
 }

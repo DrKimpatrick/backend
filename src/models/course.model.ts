@@ -36,6 +36,14 @@ export const courseSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    customers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false,
+        default: [],
+      },
+    ],
     verificationStatus: {
       type: String,
       required: true,

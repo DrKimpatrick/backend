@@ -449,4 +449,64 @@ courseRouter.get('/group/owner', courseController.groupNumberOfCourseByOwner);
  */
 courseRouter.get('/affiliate/:id', courseController.listCourseOfAffiliateUser);
 
+/**
+ * @swagger
+ * /api/v1/courses/sold/:userId:
+ *   get:
+ *     summary: Fetch all courses bought by a given user
+ *     tags: [Courses]
+ *     description: Fetch all courses bought by a given user
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/CourseResponse'
+ *
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+courseRouter.get('/sold/:userId', courseController.fetchSoldCourses);
+
+/**
+ * @swagger
+ * /api/v1/:courseId/customers:
+ *   get:
+ *     summary: Fetch all customers for a given courses
+ *     tags: [Courses]
+ *     description: Fetch all customers for a given courses
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/CourseResponse'
+ *
+ *       404:
+ *          description: Not Found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+courseRouter.get('/:courseId/customers', courseController.getCourseBuyers);
+
 export { courseRouter };

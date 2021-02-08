@@ -100,6 +100,14 @@ const userSchema = new Schema(
         default: null,
       },
     ],
+    paidCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+        required: false,
+        default: [],
+      },
+    ],
     profileProcess: {
       type: String,
       required: false,

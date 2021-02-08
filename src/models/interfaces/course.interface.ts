@@ -19,4 +19,5 @@ export interface ICourse extends Document {
     productId: String;
     priceId: String;
   };
+  customers?: string[];
 }

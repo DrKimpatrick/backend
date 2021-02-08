@@ -7,11 +7,13 @@ export function stripeSubscriptionRules() {
     body('paymentMethodId', 'paymentMethodId is required').isString().trim().notEmpty(),
     body('customerInfo.email', 'valid customer email required').trim().isEmail(),
     body('customerInfo.name', 'valid customer name required').isString().trim().notEmpty(),
-    body('customerInfo.planId', 'valid customer planId required').isString().trim().notEmpty(),
+    body('customerInfo.planId', 'valid customer planId required')
+      .optional()
+      .isString()
+      .trim()
+      .notEmpty(),
     body('featureChoice', 'valid featureChoice required')
       .optional()
-      .trim()
-      .isString()
       .isIn(Object.values(FEATURE_CHOICE)),
     body('profileProcess', 'valid profileProcess required')
       .trim()

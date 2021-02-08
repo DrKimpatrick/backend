@@ -23,6 +23,7 @@ export default interface IUser extends Document {
   name?: string;
   isSuperAdmin?: boolean;
   courses?: string[];
+  paidCourses?: string[];
   profileProcess?: string;
   bio?: string;
   profilePicture?: string;

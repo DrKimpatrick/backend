@@ -347,6 +347,42 @@ export class CourseController {
       );
     }
   };
+
+  fetchSoldCourses = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.params;
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+      const courses = await courseModel.find({ customers: userId });
+
+      return res.json({ data: courses || [] });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch courses due to internal server error',
+          error
+        )
+      );
+    }
+  };
+
+  getCourseBuyers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { courseId } = req.params;
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+      const courses = await courseModel.findById(courseId).populate('customers');
+
+      return res.json({ data: courses?.customers || [] });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch courses due to internal server error',
+          error
+        )
+      );
+    }
+  };
 }
 
 export default new CourseController();

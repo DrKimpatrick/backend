@@ -4,7 +4,7 @@ import { DOCUMENT_ACTION, MODELS, STATUS_CODES, USER_ROLES } from '../../constan
 import IBetaTester from '../../models/interfaces/beta-tester.interface';
 import { createSkills } from '../skills/skills.controller';
 import { getPagination } from '../../helpers';
-import User from '../../models/interfaces/user.interface';
+import IUser from '../../models/interfaces/user.interface';
 import { HttpError } from '../../helpers/error.helpers';
 import { encryptText } from '../../helpers/auth.helpers';
 import { environment } from '../../config/environment';
@@ -81,7 +81,7 @@ export class UserController {
 
       const courseModel = ModelFactory.getModel(MODELS.COURSE);
 
-      let user: User;
+      let user: IUser;
 
       const findUserByUsername = await userModel
         .findOne({ username: userId })
@@ -292,7 +292,7 @@ export class UserController {
         talents = isSuperAdmin
           ? userSkills.map((x: Record<string, unknown>) => x.user).filter((x) => !!x)
           : userSkills
-              .map((x: Record<string, User>) => x.user)
+              .map((x: Record<string, IUser>) => x.user)
               .filter((x) => !!x && x.userCouponDetails?.length);
       }
 

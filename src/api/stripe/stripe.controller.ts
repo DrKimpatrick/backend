@@ -10,6 +10,7 @@ import {
   AFFILIATE_PRODUCT_PREFIX,
   STATUS_CODES,
   USER_ROLES,
+  COURSE_BILLING_OPTIONS,
 } from '../../constants';
 import { HttpError } from '../../helpers/error.helpers';
 import IUser, { IUserCoupon } from '../../models/interfaces/user.interface';
@@ -44,10 +45,15 @@ export class StripeController {
       return this.handleAdminTierSubscription(req, res, next);
     }
     // not an admin, validate feature choice
-    if (!Object.values(FEATURE_CHOICE).includes(req.body.featureChoice)) {
-      return next(new HttpError(STATUS_CODES.BAD_REQUEST, 'valid featureChoice required'));
+    if (Object.values(FEATURE_CHOICE).includes(req.body.featureChoice)) {
+      return this.handleTalentSubscription(req, res, next);
     }
-    return this.handleTalentSubscription(req, res, next);
+
+    if (req.body.course) {
+      return this.handleAffiliateCourseSubscription(req, res, next);
+    }
+
+    return next(new HttpError(STATUS_CODES.BAD_REQUEST, 'valid featureChoice required'));
   };
 
   handleTalentSubscription = async (req: Request, res: Response, next: NextFunction) => {
@@ -230,6 +236,97 @@ export class StripeController {
     }
   };
 
+  handleAffiliateCourseSubscription = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { paymentMethodId, customerInfo, course: courseId } = req.body;
+
+      // fetch course
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      const course = await courseModel.findById(courseId);
+
+      if (!course)
+        return next(
+          new HttpError(STATUS_CODES.BAD_REQUEST, 'courseId does not match any course in our DB')
+        );
+
+      // create customer
+      const customer = await this.getOrCreateCustomer(customerInfo, paymentMethodId);
+      let subscription: any;
+
+      // if one-time, invoice
+      if (course.billing === COURSE_BILLING_OPTIONS.ONE_TIME) {
+        await this.stripe.invoiceItems.create({
+          customer: customer.id,
+          price: course.stripeInfo.priceId as string,
+        });
+        const invoice = await this.stripe.invoices.create({ customer: customer.id });
+        subscription = { latest_invoice: invoice };
+      } else {
+        // else its a subscription
+        subscription = await this.stripe.subscriptions.create({
+          customer: customer.id,
+          items: [
+            {
+              price: course.stripeInfo.priceId as string,
+            },
+          ],
+          expand: ['latest_invoice.payment_intent'],
+        });
+      }
+
+      // store customers' courses as comma separated string
+      this.stripe.customers.update(customer.id, {
+        metadata: {
+          courses: customer.metadata.courses
+            ? `${customer.metadata.courses},${course.id}`
+            : `${course.id}`,
+        },
+      });
+
+      // update user data to add course they just bought
+      await userModel.findByIdAndUpdate(req.currentUser?._id, {
+        $push: { paidCourses: course.id },
+      });
+
+      // update course to store user who bought
+      await courseModel.findByIdAndUpdate(course.id, {
+        $push: { customers: req.currentUser?._id },
+      });
+
+      const clientEjsData = {
+        username: req.currentUser?.username,
+        courseName: course.name,
+        courseInstructor: course.instructor,
+        courseLink: course.existingCourseLink,
+      };
+      const pathToTemplate = path.join(
+        __dirname,
+        '../../',
+        'templates/course-notification-talent.ejs'
+      );
+
+      // email client with course details
+      await sendEmail({
+        subject: 'Subscription Coupon/Code for talent Users.',
+        to: req.currentUser?.email as string,
+        html: await getEmailTemplate(pathToTemplate, clientEjsData),
+      });
+
+      // TODO: email affiliate to notify about new customer
+
+      return res.status(STATUS_CODES.CREATED).json({ subscription });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to create course subscription due to unexpected error',
+          error
+        )
+      );
+    }
+  };
+
   async createAffiliateProduct(courseData: ICourse) {
     // Don't continue if product exists already
     if (courseData.stripeInfo.productId || courseData.stripeInfo.priceId) return;
@@ -245,7 +342,7 @@ export class StripeController {
     const price = await this.stripe.prices.create({
       currency: 'usd',
       product: course.id,
-      unit_amount: parseInt(courseData.price, 10),
+      unit_amount: parseInt(courseData.price, 10) * 100,
       ...(courseData.billing !== 'one-time' ? { recurring: { interval: courseData.billing } } : {}),
     });
 
@@ -284,7 +381,8 @@ export class StripeController {
 
   private getOrCreateCustomer = async (
     customerInfo: Record<string, undefined>,
-    paymentMethodId?: string
+    paymentMethodId?: string,
+    metadata?: {}
   ): Promise<Stripe.Customer> => {
     let customer: Stripe.Customer;
 
@@ -303,6 +401,7 @@ export class StripeController {
           default_payment_method: paymentMethodId,
         },
         expand: ['subscriptions', 'sources'],
+        metadata,
       });
     } else {
       [customer] = customers.data;

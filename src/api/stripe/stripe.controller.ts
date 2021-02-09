@@ -197,7 +197,7 @@ export class StripeController {
     try {
       const ADMIN_PRODUCT_NAME = 'admin subsidies';
 
-      const stripeProducts = await this.stripe.products.list({ active: true });
+      const stripeProducts = await this.stripe.products.list({ active: true, limit: 100 });
       let plans = await this.stripe.plans.list({ active: true, expand: ['data.tiers'] });
 
       plans = this.formatPlans(plans.data);

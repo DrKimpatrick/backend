@@ -20,4 +20,5 @@ export interface ICourse extends Document {
     priceId: String;
   };
   customers?: string[];
+  views?: string[];
 }

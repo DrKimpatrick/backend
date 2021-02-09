@@ -383,6 +383,24 @@ export class CourseController {
       );
     }
   };
+
+  addViewToCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const courseId = req.params.id;
+      const userId = req.currentUser?.id;
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+      await courseModel.updateOne({ _id: courseId }, { $addToSet: { views: userId } });
+      res.status(STATUS_CODES.OK).json({ message: 'View is added successfully', userId });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to add view due to internal server error',
+          error
+        )
+      );
+    }
+  };
 }
 
 export default new CourseController();

@@ -132,6 +132,11 @@ const courseRouter = express.Router();
  *         in: body
  *         required: true
  *         type: string
+ *       - name: format
+ *         description: format(Hr or Min)
+ *         in: body
+ *         required: true
+ *         type: string
  *       - name: description
  *         description: description
  *         in: body
@@ -508,5 +513,27 @@ courseRouter.get('/sold/:userId', courseController.fetchSoldCourses);
  *                $ref: '#definitions/ValidationError'
  */
 courseRouter.get('/:courseId/customers', courseController.getCourseBuyers);
+
+/**
+ * @swagger
+ * /api/v1/courses/:id/views:
+ *   put:
+ *     summary: update a course views
+ *     tags: [Courses]
+ *     description: Update the course's views
+ *     responses:
+ *       200:
+ *         description: Views has been updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 userId:
+ *                   type: string
+ */
+courseRouter.put('/:id/views', courseController.addViewToCourse);
 
 export { courseRouter };

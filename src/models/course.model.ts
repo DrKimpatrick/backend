@@ -86,6 +86,14 @@ export const courseSchema = new Schema(
       priceId: String,
       required: false,
     },
+    views: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false,
+        default: null,
+      },
+    ],
   },
   { timestamps: true }
 );

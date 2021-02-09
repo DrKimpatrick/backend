@@ -151,6 +151,17 @@ describe('Courses', () => {
 
       expect(course.status).toEqual(STATUS_CODES.BAD_REQUEST);
     });
+
+    it('should update course views', async () => {
+      const course = await supertest(app)
+        .put(`/api/v1/courses/${courseId}/views`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+      expect(course.status).toEqual(STATUS_CODES.OK);
+      expect(course.body).toHaveProperty('message');
+      expect(course.body).toHaveProperty('userId');
+    });
   });
 
   describe('GET /List courses by status', () => {

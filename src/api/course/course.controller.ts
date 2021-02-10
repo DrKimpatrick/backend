@@ -412,11 +412,13 @@ export class CourseController {
           userId: affiliateId.toString(),
           verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED,
         })
-        .select('_id customers views')
+        .select('_id customers views price')
         .exec();
 
       let viewers: string[] = [];
       let customers: string[] = [];
+      let totalCoursesPrice = 0;
+      let totalCoursesLinks = 0;
 
       if (Array.isArray(courses) && courses.length) {
         courses.forEach((course) => {
@@ -428,7 +430,9 @@ export class CourseController {
             const stringsArray = course.customers.map((u) => u.toString());
             customers = [...customers, ...stringsArray];
           }
+          totalCoursesPrice += Number(course.price);
         });
+        totalCoursesLinks = courses.length;
       }
 
       const conversionRate = calculateCourseConversionRate(viewers, customers);
@@ -436,12 +440,66 @@ export class CourseController {
       return res.status(STATUS_CODES.OK).json({
         conversionRate,
         views: viewers.length,
+        totalCoursesPrice,
+        totalCoursesLinks
       });
     } catch (error) {
       return next(
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
           'Unable to get stats of courses for affiliate due to internal server error',
+          error
+        )
+      );
+    }
+  };
+
+  // This controller will change and use real transactions
+  getQuarterlyCommissionForAffiliate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const affiliateId = req.params.id;
+
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+
+      const courses = await courseModel
+        .find({
+          userId: affiliateId.toString(),
+          verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED,
+        })
+        .select('_id customers price')
+        .exec();
+
+      const today = new Date();
+      const monthsInQuarter = 3;
+
+      // This varies based on an admin input
+      const affiliatePercentage = 60;
+
+      // Current number of months in this quarter
+      const currentMonthsInQuarter =
+        (today.getMonth() + 1) % 3 === 0 ? monthsInQuarter : (today.getMonth() + 1) % 3;
+
+      let conversionPayments = 0;
+
+      if (Array.isArray(courses) && courses.length) {
+        courses.forEach((course) => {
+          if (Array.isArray(course?.customers) && course?.customers.length) {
+            conversionPayments +=
+              course.customers.length * Number(course.price) * currentMonthsInQuarter;
+          }
+        });
+      }
+
+      const quarterlyCommission = (conversionPayments * affiliatePercentage) / 100;
+
+      res.status(STATUS_CODES.OK).json({
+        quarterlyCommission,
+      });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to get the commission due to internal server error',
           error
         )
       );

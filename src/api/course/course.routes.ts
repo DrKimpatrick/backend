@@ -592,4 +592,28 @@ courseRouter.get(
   courseController.GetStatsOfCoursesForAffiliate
 );
 
+/**
+ * @swagger
+ * /api/v1/courses/affiliate/:id/quarterly-commission:
+ *   put:
+ *     summary: Get quarterly commission
+ *     tags: [Courses]
+ *     description: Get quarterly commission for an affiliate
+ *     responses:
+ *       200:
+ *         description: Quarterly commission has been calculated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 quarterlyCommission:
+ *                   type: number
+ */
+courseRouter.get(
+  '/affiliate/:id/quarterly-commission',
+  requireRoles([USER_ROLES.TRAINING_AFFILIATE]),
+  courseController.getQuarterlyCommissionForAffiliate
+);
+
 export { courseRouter };

@@ -17,6 +17,11 @@ describe('Courses', () => {
     token = user.toAuthJSON().token;
   });
 
+  afterEach(async () => {
+    await userM.deleteMany({});
+    await courseModel.deleteMany({});
+  });
+
   describe('POST /api/v1/courses', () => {
     it('should save new course', async () => {
       const newCourse = await supertest(app)
@@ -214,6 +219,7 @@ describe('Courses', () => {
 
       token = newUser.toAuthJSON().token;
     });
+
     it('should get courses of affiliate user', async () => {
       const course = await supertest(app)
         .get(`/api/v1/courses/affiliate/${affiliateUser._id}`)
@@ -224,6 +230,25 @@ describe('Courses', () => {
       expect(typeof course.status).toEqual('number');
 
       expect(course.body).toHaveProperty('data');
+    });
+
+    it('should get stats for courses of affiliate user', async () => {
+      const talentUser = await userM.create(addUser(USER_ROLES.TALENT));
+      await courseModel.create({
+        ...addCourse,
+        userId: affiliateUser._id,
+        views: [talentUser._id],
+        customers: [talentUser._id],
+        verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED,
+      });
+
+      const course = await supertest(app)
+        .get(`/api/v1/courses/affiliate/${affiliateUser._id}/stats`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(course.status).toEqual(STATUS_CODES.OK);
+      expect(course.body).toHaveProperty('conversionRate');
+      expect(course.body).toHaveProperty('views');
     });
   });
 });

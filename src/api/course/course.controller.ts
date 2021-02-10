@@ -3,15 +3,14 @@ import { ModelFactory } from '../../models/model.factory';
 import { COURSE_VERIFICATION_STATUS, MODELS, STATUS_CODES, USER_ROLES } from '../../constants';
 import { ICourse } from '../../models/interfaces/course.interface';
 import { HttpError } from '../../helpers/error.helpers';
-import { getPagination } from '../../helpers';
 import stripeController from '../stripe/stripe.controller';
+import { getPagination, calculateCourseConversionRate } from '../../helpers';
 
 /**
  * @function CourseController
  * @description Handles all course related business logic
  *
  */
-
 export class CourseController {
   registerCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -396,6 +395,53 @@ export class CourseController {
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
           'Unable to add view due to internal server error',
+          error
+        )
+      );
+    }
+  };
+    
+  GetStatsOfCoursesForAffiliate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const affiliateId = req.params.id;
+
+      const courseModel = ModelFactory.getModel<ICourse>(MODELS.COURSE);
+
+      const courses = await courseModel
+        .find({
+          userId: affiliateId.toString(),
+          verificationStatus: COURSE_VERIFICATION_STATUS.ACCEPTED,
+        })
+        .select('_id customers views')
+        .exec();
+
+      let viewers: string[] = [];
+      let customers: string[] = [];
+
+      if (Array.isArray(courses) && courses.length) {
+        courses.forEach((course) => {
+          if (Array.isArray(course?.views) && course?.views.length) {
+            const stringsArray = course.views.map((v) => v.toString());
+            viewers = [...viewers, ...stringsArray];
+          }
+          if (Array.isArray(course?.customers) && course?.customers.length) {
+            const stringsArray = course.customers.map((u) => u.toString());
+            customers = [...customers, ...stringsArray];
+          }
+        });
+      }
+
+      const conversionRate = calculateCourseConversionRate(viewers, customers);
+
+      return res.status(STATUS_CODES.OK).json({
+        conversionRate,
+        views: viewers.length,
+      });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to get stats of courses for affiliate due to internal server error',
           error
         )
       );

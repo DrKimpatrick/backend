@@ -48,3 +48,10 @@ export const getPagination = async (req: Request, model: Model<any>, condition =
   const totalDocs = await model.countDocuments(condition);
   return { limit, page, offset, totalDocs };
 };
+
+export const calculateCourseConversionRate = (viewers: string[] = [], customers: string[] = []) => {
+  const convertingVisitors = customers.filter((user) => viewers.includes(user));
+  return !convertingVisitors.length && !viewers.length
+    ? 0
+    : (convertingVisitors.length / viewers.length) * 100;
+};

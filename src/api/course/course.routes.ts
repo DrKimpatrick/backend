@@ -72,6 +72,35 @@ const courseRouter = express.Router();
  *       type: string
  *       example:  https://cover.com/image.jpeg
  *
+ *   paymentsResponse:
+ *     type: object
+ *     properties:
+ *       data:
+ *         type: array
+ *         items:
+ *           type: object
+ *           properties:
+ *             course:
+ *               type: string
+ *             issuer:
+ *               type: string
+ *             usedBy:
+ *               $ref: '#definitions/UserProfile'
+ *             paymentId:
+ *               type: string
+ *             term:
+ *               type: string
+ *             expiresAt:
+ *               type: string
+ *
+ *   CoursesStatsResponse:
+ *     type: object
+ *     properties:
+ *       conversionRate:
+ *         type: number
+ *       views:
+ *         type: number
+ *
  *   SuccessMessage:
  *     type: object
  *     properties:
@@ -535,5 +564,32 @@ courseRouter.get('/:courseId/customers', courseController.getCourseBuyers);
  *                   type: string
  */
 courseRouter.put('/:id/views', courseController.addViewToCourse);
+
+/**
+ * @swagger
+ * /api/v1/courses/affiliate/:id/stats:
+ *   get:
+ *     summary: Get statistics of courses of an affiliate
+ *     tags: [Courses]
+ *     description: Calculate and get views, conversion rate of all courses that belong to an affiliate
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/definitions/CoursesStatsResponse'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+courseRouter.get(
+  '/affiliate/:id/stats',
+  requireRoles([USER_ROLES.TRAINING_AFFILIATE]),
+  courseController.GetStatsOfCoursesForAffiliate
+);
 
 export { courseRouter };

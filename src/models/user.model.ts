@@ -162,6 +162,13 @@ const userSchema = new Schema(
       required: false,
       default: null,
     },
+    userSubscription: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'UserSubscription',
+        required: false,
+      },
+    ],
   },
   { timestamps: { createdAt: 'dateRegistered' } }
 );

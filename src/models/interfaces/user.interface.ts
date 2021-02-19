@@ -32,6 +32,7 @@ export default interface IUser extends Document {
   userCouponDetails?: any[];
   sharedLink?: string;
   recommendedBy?: string;
+  userSubscription?: string[];
 }
 
 export interface IUserCoupon extends Document {

@@ -530,4 +530,26 @@ describe('User /users', () => {
       expect(res.body).toHaveProperty('data');
     });
   });
+
+  describe('user subscription', () => {
+    it('should return user subscription', async () => {
+      const res = await supertest(app)
+        .get(`/api/v1/users/subscription/${user._id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('data');
+    });
+
+    it('should return user subscription by year', async () => {
+      const res = await supertest(app)
+        .get(`/api/v1/users/subscription/year/2021`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toEqual(STATUS_CODES.OK);
+
+      expect(res.body).toHaveProperty('data');
+    });
+  });
 });

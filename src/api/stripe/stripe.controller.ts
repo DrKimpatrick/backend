@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 import path from 'path';
+import { addMonths, addYears, format } from 'date-fns';
 import { environment } from '../../config/environment';
 import {
   FEATURE_CHOICE,
@@ -19,6 +20,7 @@ import { Subsidy } from '../../interfaces';
 import { sendEmail } from '../../config/sendgrid';
 import { getEmailTemplate } from '../../shared/email.templates';
 import { ICourse } from '../../models/interfaces/course.interface';
+import { IUserSubscription, Payment } from '../../models/interfaces/user-subscription.interface';
 
 export class StripeController {
   private stripe: Stripe;
@@ -59,8 +61,12 @@ export class StripeController {
   handleTalentSubscription = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { paymentMethodId, customerInfo, featureChoice, coupon, profileProcess } = req.body;
+
       const userId = req.currentUser?._id;
+
       const customer = await this.getOrCreateCustomer(customerInfo, paymentMethodId);
+
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
 
       const subscription = await this.stripe.subscriptions.create({
         customer: customer.id,
@@ -73,7 +79,20 @@ export class StripeController {
         expand: ['latest_invoice.payment_intent'],
       });
 
-      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+      const getPlan = await this.stripe.plans.retrieve(customerInfo.planId);
+
+      const { amount, interval, id } = getPlan;
+
+      const paymentObj = {
+        amount: amount ? amount / 100 : 0,
+        featureChoice,
+        paidOn: new Date(),
+        subscriptionPriceId: id,
+        interval,
+      };
+
+      await this.handleUserSubscription({ paymentObj, user: req.currentUser });
+
       await userModel
         .findByIdAndUpdate(userId, {
           featureChoice,
@@ -131,6 +150,23 @@ export class StripeController {
         duration: 'forever',
         metadata: { plan: plan.id, email: customerInfo.email, issuer: userId.toString() },
       });
+
+      const { id, interval } = plan;
+
+      const {
+        tier: { unit_amount, up_to },
+      } = subsidy;
+
+      const paymentObj = {
+        amount: unit_amount ? unit_amount / 100 : 0,
+        featureChoice,
+        paidOn: new Date(),
+        subscriptionPriceId: id,
+        interval,
+        upTo: up_to || undefined,
+      };
+
+      await this.handleUserSubscription({ paymentObj, user: req.currentUser });
 
       const subscription = await this.stripe.subscriptions.create({
         customer: customer.id,
@@ -408,6 +444,68 @@ export class StripeController {
     }
 
     return customer;
+  };
+
+  private handleUserSubscription = async ({
+    paymentObj,
+    user,
+  }: {
+    paymentObj: Payment;
+    user?: IUser;
+  }) => {
+    const userSubscriptionModel = ModelFactory.getModel<IUserSubscription>(
+      MODELS.USER_SUBSCRIPTION
+    );
+
+    const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+
+    const currentYear = new Date().getFullYear();
+
+    const userId = user?._id;
+
+    const getSubscription = await userSubscriptionModel.findOne({
+      $and: [{ userId }, { year: currentYear }],
+    });
+
+    if (getSubscription) {
+      // update payment under year
+      await userSubscriptionModel.updateOne(
+        { _id: getSubscription._id },
+        {
+          $push: {
+            payment: paymentObj,
+          },
+        }
+      );
+    } else {
+      const paidOn = format(new Date(paymentObj.paidOn), 'MM/dd/yyyy');
+
+      const nextPaymentDate =
+        paymentObj.interval === 'month'
+          ? addMonths(new Date(paidOn), 1)
+          : addYears(new Date(paidOn), 1);
+      // create new subscription
+      const createSubscription = await userSubscriptionModel.create({
+        userId,
+        year: currentYear,
+        payment: [paymentObj],
+        nextPaymentDate,
+      });
+
+      if (createSubscription) {
+        if (user && Array.isArray(user.userSubscription)) {
+          await userModel.findByIdAndUpdate(userId, {
+            $push: { userSubscription: createSubscription._id },
+          });
+        } else {
+          await userModel.findByIdAndUpdate(userId, {
+            $set: { userSubscription: [createSubscription._id] },
+          });
+        }
+      }
+    }
+
+    return undefined;
   };
 }
 

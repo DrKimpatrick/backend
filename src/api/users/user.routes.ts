@@ -137,6 +137,34 @@ const userRouter = Router();
  *          items:
  *            $ref: '#/definitions/EducationHistory'
  *
+ *   SubscriptionPayment:
+ *      type: object
+ *      properties:
+ *        paidOn:
+ *          type: string
+ *        featureChoice:
+ *          type: string
+ *        amount:
+ *          type: number
+ *        interval:
+ *          type: string
+ *        subscriptionPriceId:
+ *          type: string
+ *
+ *   UserSubscription:
+ *      type: object
+ *      properties:
+ *        userId:
+ *          type: string
+ *        year:
+ *          type: number
+ *        nextPaymentDate:
+ *          type: string
+ *        payment:
+ *          type: array
+ *          items:
+ *            $ref: '#/definitions/SubscriptionPayment'
+ *
  *   BetaTester:
  *     type: object
  *     properties:
@@ -520,5 +548,113 @@ userRouter.post(
  *                $ref: '#definitions/ValidationError'
  */
 userRouter.get('/list/recommendation', userController.getRecommendedUser);
+
+/**
+ * @swagger
+ * /api/v1/users/subscription/{userId}:
+ *   get:
+ *     summary: Retrieve all user subscriptions
+ *     tags: [Users]
+ *     description: Retrieve all user subscriptions
+ *
+ *     responses:
+ *       200:
+ *         description: ok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSubscription'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/subscription/:userId', userController.getMySubscription);
+
+/**
+ * @swagger
+ * /api/v1/users/subscription/year/{year}:
+ *   get:
+ *     summary: Retrieve user subscription by year
+ *     tags: [Users]
+ *     description: Retrieve user subscription by year
+ *
+ *     responses:
+ *       200:
+ *         description: ok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSubscription'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get('/subscription/year/:year', userController.getSubscriptionByYear);
+
+/**
+ * @swagger
+ * /api/v1/users/subscription/recommendation/{userId}:
+ *   get:
+ *     summary: Retrieve subscription of user who recommended by me
+ *     tags: [Users]
+ *     description: Retrieve subscription of user who recommended by me
+ *
+ *     responses:
+ *       200:
+ *         description: ok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/definitions/UserSubscription'
+ *       500:
+ *          description: Server Error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/Error'
+ *       401:
+ *          description: Unauthorized
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#definitions/ValidationError'
+ */
+userRouter.get(
+  '/subscription/recommendation/:userId',
+  userController.getSubscriptionOfRecommendedUser
+);
 
 export { userRouter };

@@ -51,6 +51,7 @@ export const MODELS = {
   COMPANY: 'company',
   SCHOOL: 'school',
   USER_COUPON: 'user-coupon',
+  USER_SUBSCRIPTION: 'user-subscription',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';

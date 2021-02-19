@@ -77,6 +77,7 @@ describe('Stripe /stripe', () => {
     const customersMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
     const subscriptionsMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
     const customersListMock = jest.fn().mockResolvedValue({ data: [] });
+    const retrieveMock = jest.fn().mockResolvedValue({ amount: 100, interval: 'year', id: 'id' });
 
     Stripe.prototype.customers = {
       create: customersMock,
@@ -84,6 +85,10 @@ describe('Stripe /stripe', () => {
     } as any;
     Stripe.prototype.subscriptions = {
       create: subscriptionsMock,
+    } as any;
+
+    Stripe.prototype.plans = {
+      retrieve: retrieveMock,
     } as any;
 
     user = await userM.create({
@@ -132,6 +137,7 @@ describe('Stripe /stripe', () => {
       id: planId,
       currency: 'usd',
       product: faker.random.uuid(),
+      interval: 'month',
     });
     const couponMock = jest.fn().mockResolvedValue({ id: faker.random.uuid() });
 
@@ -164,9 +170,11 @@ describe('Stripe /stripe', () => {
         planId,
         tier: {
           unit_amount: 5000,
+          up_to: 100,
         },
       },
       profileProcess: AdminsProcess.Completed,
+      featureChoice: FEATURE_CHOICE.STANDARD,
     };
 
     supertest(app)

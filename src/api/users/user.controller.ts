@@ -8,6 +8,7 @@ import IUser from '../../models/interfaces/user.interface';
 import { HttpError } from '../../helpers/error.helpers';
 import { encryptText } from '../../helpers/auth.helpers';
 import { environment } from '../../config/environment';
+import { IUserSubscription } from '../../models/interfaces/user-subscription.interface';
 
 /**
  * @function UserController
@@ -346,7 +347,7 @@ export class UserController {
       return next(
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
-          'Could not fetch user skiils  due to internal server error'
+          'Could not fetch user skills  due to internal server error'
         )
       );
     }
@@ -366,9 +367,12 @@ export class UserController {
     try {
       const id = req.currentUser?._id;
 
-      const userModel = ModelFactory.getModel(MODELS.USER);
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
 
-      const find = await userModel.find({ recommendedBy: id }).sort({ updatedAt: -1 });
+      const find = await userModel
+        .find({ recommendedBy: id })
+        .sort({ updatedAt: -1 })
+        .populate('userSubscription');
 
       return res.json({ data: find });
     } catch (error) {
@@ -376,6 +380,104 @@ export class UserController {
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
           'Unable perform action due to internal server error'
+        )
+      );
+    }
+  };
+
+  getMySubscription = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userSubscriptionModel = ModelFactory.getModel<IUserSubscription>(
+        MODELS.USER_SUBSCRIPTION
+      );
+
+      const { userId } = req.params;
+
+      const id = req.currentUser?._id;
+
+      const roles = req.currentUser?.roles;
+
+      let find;
+
+      if (id !== userId && roles && roles.includes(USER_ROLES.SUPER_ADMIN)) {
+        find = await userSubscriptionModel
+          .find({ userId })
+          .sort({ createdAt: -1 })
+          .populate('userId', '_id username email profilePicture bio verified');
+      } else {
+        find = await userSubscriptionModel
+          .find({ userId: id })
+          .sort({ createdAt: -1 })
+          .populate('userId', '_id username email profilePicture bio verified');
+      }
+
+      return res.json({ data: find });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch subscriptions due to internal server error'
+        )
+      );
+    }
+  };
+
+  getSubscriptionByYear = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userSubscriptionModel = ModelFactory.getModel<IUserSubscription>(
+        MODELS.USER_SUBSCRIPTION
+      );
+
+      const id = req.currentUser?._id;
+
+      const { year } = req.params;
+
+      const find = await userSubscriptionModel
+        .findOne({ $and: [{ userId: id }, { year: Number(year) }] })
+        .populate('userId', '_id username email profilePicture bio verified');
+
+      return res.json({ data: find });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch subscription due to internal server error'
+        )
+      );
+    }
+  };
+
+  getSubscriptionOfRecommendedUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userSubscriptionModel = ModelFactory.getModel<IUserSubscription>(
+        MODELS.USER_SUBSCRIPTION
+      );
+
+      const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
+
+      const { userId } = req.params;
+
+      const id = req.currentUser?._id;
+
+      const check = await userModel.findOne({ $and: [{ _id: userId }, { recommendedBy: id }] });
+
+      if (!check) {
+        return res
+          .status(STATUS_CODES.FORBIDDEN)
+          .json({ message: 'You are not allowed to perform this action' });
+      }
+
+      const find = await userSubscriptionModel
+        .find({ userId })
+        .populate('userId', '_id username email profilePicture bio verified')
+        .sort({ createdAt: -1 });
+
+      return res.json({ data: find });
+    } catch (error) {
+      return next(
+        new HttpError(
+          STATUS_CODES.SERVER_ERROR,
+          'Unable to fetch subscription due to internal server error'
         )
       );
     }

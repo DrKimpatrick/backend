@@ -400,7 +400,7 @@ export class CourseController {
       );
     }
   };
-    
+
   GetStatsOfCoursesForAffiliate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const affiliateId = req.params.id;
@@ -441,7 +441,7 @@ export class CourseController {
         conversionRate,
         views: viewers.length,
         totalCoursesPrice,
-        totalCoursesLinks
+        totalCoursesLinks,
       });
     } catch (error) {
       return next(

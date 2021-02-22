@@ -369,10 +369,7 @@ export class UserController {
 
       const userModel = ModelFactory.getModel<IUser>(MODELS.USER);
 
-      const find = await userModel
-        .find({ recommendedBy: id })
-        .sort({ updatedAt: -1 })
-        .populate('userSubscription');
+      const find = await userModel.find({ recommendedBy: id }).sort({ updatedAt: -1 });
 
       return res.json({ data: find });
     } catch (error) {
@@ -477,7 +474,7 @@ export class UserController {
       return next(
         new HttpError(
           STATUS_CODES.SERVER_ERROR,
-          'Unable to fetch subscription due to internal server error'
+          'Unable to perform action due to internal server error'
         )
       );
     }

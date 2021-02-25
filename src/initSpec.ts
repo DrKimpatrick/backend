@@ -3,12 +3,6 @@ import { ModelFactory } from './models/model.factory';
 import { MODELS } from './constants';
 import IBetaTester from './models/interfaces/beta-tester.interface';
 
-(async () => {
-  // Only start the server if the mongo connection is active
-  const client = MongoClient;
-  await client.getClient();
-})();
-
 const userM = ModelFactory.getModel(MODELS.USER);
 const socialM = ModelFactory.getModel(MODELS.SOCIAL_AUTH);
 const skillModel = ModelFactory.getModel(MODELS.SKILL);
@@ -18,6 +12,9 @@ const betaTesterModel = ModelFactory.getModel<IBetaTester>(MODELS.BETA_TESTER);
 const courseModel = ModelFactory.getModel(MODELS.COURSE);
 const userSkillsModel = ModelFactory.getModel(MODELS.USER_SKILLS);
 const userCouponM = ModelFactory.getModel(MODELS.USER_COUPON);
+const testModel = ModelFactory.getModel(MODELS.Test);
+const answerModel = ModelFactory.getModel(MODELS.Answer);
+const questionModel = ModelFactory.getModel(MODELS.Question);
 
 const clearDb = async () => {
   await userM.deleteMany({});
@@ -29,7 +26,15 @@ const clearDb = async () => {
   await courseModel.deleteMany({});
   await userSkillsModel.deleteMany({});
   await userCouponM.deleteMany({});
+  await testModel.deleteMany({});
+  await answerModel.deleteMany({});
+  await questionModel.deleteMany({});
 };
+
+global.beforeAll(async () => {
+  const client = MongoClient;
+  await client.getClient();
+});
 
 global.beforeEach(async () => {
   await clearDb();

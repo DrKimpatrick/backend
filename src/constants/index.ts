@@ -52,6 +52,9 @@ export const MODELS = {
   SCHOOL: 'school',
   USER_COUPON: 'user-coupon',
   USER_SUBSCRIPTION: 'user-subscription',
+  Test: 'test',
+  Question: 'question',
+  Answer: 'answer',
 };
 
 export const SENDER_EMAIL = 'support@techtalentqa.com';
@@ -220,3 +223,15 @@ export enum COURSE_BILLING_OPTIONS {
 }
 
 export const AFFILIATE_PRODUCT_PREFIX = 'affiliate_';
+
+export enum TimePolicy {
+  Strict = 'Strict',
+  Normal = 'Normal',
+  Relaxed = 'Relaxed',
+}
+
+export enum QuestionType {
+  LiveCoding = 'LiveCoding',
+  MultipleChoice = 'MultipleChoice',
+  Video = 'Video',
+}

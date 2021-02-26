@@ -9,6 +9,7 @@ import { companyRouter } from '../company/company.routes';
 import { schoolRouter } from '../school/school.routes';
 import { stripeRouter } from '../stripe/stripe.routes';
 import { testRouter } from '../testing/test.route';
+import { questionRouter } from '../question/question.routes';
 
 const v1Router = Router();
 
@@ -22,5 +23,6 @@ v1Router.use('/company', companyRouter);
 v1Router.use('/school', schoolRouter);
 v1Router.use('/stripe', stripeRouter);
 v1Router.use('/test', testRouter);
+v1Router.use('/question', questionRouter);
 
 export { v1Router };

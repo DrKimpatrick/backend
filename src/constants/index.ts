@@ -235,3 +235,8 @@ export enum QuestionType {
   MultipleChoice = 'MultipleChoice',
   Video = 'Video',
 }
+
+export enum LANGUAGE {
+  JAVASCRIPT = 'javascript',
+  PYTHON = 'python',
+}

@@ -48,6 +48,8 @@ const questionSchema = new Schema(
       required: true,
     },
     coding: {
+      type: Object,
+      required: false,
       template: {
         type: String,
         required: true,

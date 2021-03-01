@@ -2,7 +2,9 @@ version: '3'
 
 services:
   nodejs:
-    build: ./docker/dev
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
     image: nodejs
     container_name: nodejs
     restart: unless-stopped

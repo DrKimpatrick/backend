@@ -13,4 +13,4 @@ services:
       - "3500"
     ports:
       - "3500:3500"
-    command: npm run start:dev
+    # command: npm run start:dev

@@ -1,9 +1,12 @@
-FROM node:10.15.3-alpine
+FROM node:8
 
-WORKDIR /home/node/app
-ADD package*.json ./
+WORKDIR /usr/src/app
+COPY package*.json ./
+COPY nodemon.json ./
+COPY tsconfig.json ./
 
-RUN npm i
-# RUN yarn install
+EXPOSE 3500
 
-USER node
+CMD npm config set cache-min 9999999 \
+    && npm install \
+    && npm run start:dev

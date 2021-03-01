@@ -1,5 +1,7 @@
 FROM mhart/alpine-node:12
 
+RUN mkdir -p /src/node_modules
+
 # Create app directory
 WORKDIR /src
 

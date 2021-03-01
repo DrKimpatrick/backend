@@ -12,11 +12,11 @@ services:
     ports:
       - "3500:3500"
     volumes:
-      - .:/home/node/app
-      - node_modules:/home/node/app/node_modules
+      - .:/src
+      - node_modules:/src/node_modules
     networks:
       - app-network
-    # command: /home/node/app/node_modules/.bin/nodemon ./dist/server.js
+    command: /src/node_modules/.bin/nodemon ./dist/server.js
 
 networks:
   app-network:

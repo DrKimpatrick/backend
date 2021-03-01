@@ -3,6 +3,7 @@ FROM node:14-alpine as base
 WORKDIR /src
 COPY package*.json ./
 COPY yarn.lock ./
+COPY tsconfig*.json ./
 EXPOSE 3500
 
 FROM base as production

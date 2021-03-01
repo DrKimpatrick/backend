@@ -1,8 +1,8 @@
 FROM mhart/alpine-node:12
 
-USER node
+# USER node
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+RUN mkdir -p /home/node/app/node_modules && chown -R node /home/node/app
 
 # Create app directory
 # WORKDIR /src
@@ -17,8 +17,8 @@ COPY package*.json ./
 RUN npm install
 
 # Bundle app source
-# COPY . .
-COPY --chown=node:node . .
+COPY . .
+# COPY --chown=node:node . .
 
 RUN npm run build
 

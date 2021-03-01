@@ -13,6 +13,7 @@
     "start": "node dist/server.js",
     "start:dev": "NODE_ENV=development nodemon",
     "start:debug": "NODE_ENV=development DEBUG=log nodemon --config nodemon-debug.json",
+    "build-ts": "tsc",
     "build": "rimraf ./dist && tsc --build tsconfig.build.json && mkdir ./dist/templates && cp -r ./src/templates ./dist",
     "lint": "eslint . --ext .ts",
     "prettier:write": "prettier --write '**/*.ts'",

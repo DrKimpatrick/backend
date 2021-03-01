@@ -1,13 +1,16 @@
-version: '3.8'
+version: "3.7"
+
 services:
-  web:
+  web-server:
     build:
-      context: ./
-      target: dev
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: example-web-server
     volumes:
-      - .:/src
-    command: npm run start:dev
+      - ./src:/home/node/app/src
+      - ./nodemon.json:/home/node/app/nodemon.json
+    expose:
+      - "3500"
     ports:
       - "3500:3500"
-    environment:
-      NODE_ENV: development
+    command: npm start:dev

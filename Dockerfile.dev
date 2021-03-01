@@ -2,7 +2,6 @@ FROM node:10.15.3-alpine
 
 WORKDIR /home/node/app
 ADD package*.json ./
-ADD yarn.lock ./
 
 # RUN npm i
 RUN yarn install

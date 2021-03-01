@@ -2,7 +2,7 @@ FROM mhart/alpine-node:12
 
 # USER node
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node /home/node/app
+RUN mkdir -p /home/node/app/node_modules
 
 # Create app directory
 # WORKDIR /src

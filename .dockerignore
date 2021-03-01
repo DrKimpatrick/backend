@@ -7,3 +7,5 @@ node_modules
 fontawesome*
 *-lock.json
 npm_modules
+.gitignore
+.env

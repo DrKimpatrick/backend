@@ -9,7 +9,7 @@ FROM base as production
 ENV NODE_ENV=production
 # RUN npm ci
 RUN yarn install --frozen-lockfile
-RUN npm run build-ts
+RUN npm tsc
 COPY . ./
 CMD ["node", "./dist/server.js"]
 

@@ -11,13 +11,13 @@ WORKDIR /home/node/app
 # where available (npm@5+)
 COPY package*.json ./
 
-USER node
+# USER node
 
 RUN npm install
 
 # Bundle app source
-# COPY . .
-COPY --chown=node:node . .
+COPY . .
+# COPY --chown=node:node . .
 
 RUN npm run build
 

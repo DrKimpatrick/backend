@@ -6,8 +6,8 @@ EXPOSE 3500
 
 FROM base as production
 ENV NODE_ENV=production
-# RUN npm ci
-RUN yarn install --frozen-lockfile
+RUN npm ci
+# RUN yarn install --frozen-lockfile
 RUN npm run build
 COPY . ./
 CMD ["node", "./dist/server.js"]

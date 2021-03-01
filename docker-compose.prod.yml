@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  web-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "80:3500"
